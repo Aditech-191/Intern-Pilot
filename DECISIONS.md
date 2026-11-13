@@ -1,0 +1,128 @@
+# DECISIONS.md
+
+## Index
+- [ADR-001: Next.js App Router on Vercel](#adr-001-nextjs-app-router-on-vercel) (Accepted)
+- [ADR-002: Supabase (PostgreSQL) for Data Persistence](#adr-002-supabase-postgresql-for-data-persistence) (Accepted)
+- [ADR-003: Server-Side Gemini API Integration via @google/genai](#adr-003-server-side-gemini-api-integration-via-googlegenai) (Accepted)
+- [ADR-004: Frictionless Demo Profile (No Login Wall)](#adr-004-frictionless-demo-profile-no-login-wall) (Accepted)
+- [ADR-005: Africa's Talking SMS Deadline Alerts](#adr-005-africas-talking-sms-deadline-alerts) (Proposed)
+- [ADR-006: Tailored CV Bullet & Cover Letter Generator](#adr-006-tailored-cv-bullet--cover-letter-generator) (Proposed)
+
+---
+
+## Accepted Decisions
+
+### ADR-001: Next.js App Router on Vercel
+- Date: 2026-11-13
+- Status: Accepted
+- Supersedes: None
+
+#### Context
+InternPilot must be developed and delivered before 5:00 PM today for the hackathon. It requires server-side execution for the Gemini API key, fast client-side rendering for a mobile-first interface, and zero-configuration deployment to Vercel.
+
+#### Decision
+Use Next.js (App Router, TypeScript, Tailwind CSS) deployed on Vercel. Server Route Handlers (`app/api/*`) host backend logic.
+
+#### Alternatives
+- *Vite + React SPA with separate Express server:* Requires managing two repositories or builds and separate hosting.
+- *Firebase Hosting + Cloud Functions:* Higher deployment setup friction within a 4-hour window.
+
+#### Consequences
+Single repository, unified TypeScript types across frontend and API routes, instant Vercel CI/CD deployments.
+
+---
+
+### ADR-002: Supabase (PostgreSQL) for Data Persistence
+- Date: 2026-11-13
+- Status: Accepted
+- Supersedes: None
+
+#### Context
+The app requires storing structured opportunity listings, application status (saved/applied), and handling relational queries. Vercel serverless environments have ephemeral filesystems, so local file storage cannot be used for mutations.
+
+#### Decision
+Use Supabase (PostgreSQL) accessed server-side via `@supabase/supabase-js`. Provide pre-seeded fallback data so the demo functions even if external database credentials are not supplied.
+
+#### Alternatives
+- *Vercel Postgres:* Similar benefits, but Supabase offers instant dashboard table viewing for demo judges.
+- *Firebase Firestore:* NoSQL schema is less rigid for structured opportunity filtering.
+
+#### Consequences
+Fast relational queries and filtering on deadlines and eligibility. Requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in environment.
+
+---
+
+### ADR-003: Server-Side Gemini API Integration via @google/genai
+- Date: 2026-11-13
+- Status: Accepted
+- Supersedes: None
+
+#### Context
+Hackathon rules require using the Google Gemini API. Crucially, the Gemini API key must never reach the client browser, and the advisor chatbot must strictly never hallucinate or invent listings, deadlines, or requirements.
+
+#### Decision
+All interactions with Gemini use the official `@google/genai` SDK within Next.js server Route Handlers (`/api/chat` and `/api/extract`).
+1. **Advisor Chat (`/api/chat`):** Injects student profile JSON and active database listings JSON into the system prompt with strict zero-hallucination guardrails (`gemini-2.5-flash`).
+2. **Listing Extractor (`/api/extract`):** Uses structured JSON schema parsing to extract title, organization, deadline, eligibility, requirements, and link from messy text.
+
+#### Alternatives
+- *Client-side SDK calls:* Rejected; leaks API key in network tab.
+- *Unconstrained prompting:* Rejected; risks hallucinating non-existent scholarships.
+
+#### Consequences
+Guaranteed key security. Model output is grounded exclusively in verified database listings. Graceful fallback message returned on network/rate-limit errors.
+
+---
+
+### ADR-004: Frictionless Demo Profile (No Login Wall)
+- Date: 2026-11-13
+- Status: Accepted
+- Supersedes: None
+
+#### Context
+A 3-minute hackathon live demo cannot afford login delays, email confirmation links, or authentication errors.
+
+#### Decision
+Implement lightweight client-side profile onboarding backed by localStorage/session with a prominent 1-click "Load Sample Student" button (e.g., Makerere University 3rd-year Software Engineering student).
+
+#### Alternatives
+- *Full Supabase Auth:* Adds unnecessary authentication UX friction and potential point of failure during a 3-minute demo.
+
+#### Consequences
+Instant demo setup, zero barrier to testing personalized matching immediately upon app load.
+
+---
+
+## Proposed Decisions (Awaiting Post-MVP Confirmation)
+
+### ADR-005: Africa's Talking SMS Deadline Alerts
+- Date: 2026-11-13
+- Status: Proposed
+- Context: Ugandan students often experience intermittent mobile data connectivity. SMS alerts 48 hours prior to deadlines would improve accessibility.
+- Decision: Post-hackathon integration using Africa's Talking SMS API.
+
+### ADR-006: Tailored CV Bullet & Cover Letter Generator
+- Date: 2026-11-13
+- Status: Proposed
+- Context: Once an opportunity is selected, students need assistance articulating how their specific coursework matches the opportunity requirements.
+- Decision: Dedicated Gemini prompt generating tailored application bullet points.
+
+---
+
+## Entry Template
+### ADR-[number]: [title]
+- Date: [YYYY-MM-DD]
+- Status: Proposed / Accepted / Superseded
+- Supersedes: [previous ADR, if any]
+
+#### Context
+[problem and constraints]
+#### Decision
+[chosen approach, or proposed approach awaiting a decision]
+#### Alternatives
+[options and tradeoffs]
+#### Consequences
+[benefits, costs, limitations]
+
+Preserve previous entries. Add a superseding entry when a choice changes.
+
