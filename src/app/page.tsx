@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   Briefcase,
   Clock,
@@ -21,15 +21,65 @@ import { TopBar } from "@/components/dashboard/TopBar";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { ReadinessGauge } from "@/components/dashboard/ReadinessGauge";
 import { ActivityMatchCard } from "@/components/dashboard/ActivityMatchCard";
+import { OpportunityFeed } from "@/components/dashboard/OpportunityFeed";
+import { ProfileEditor } from "@/components/dashboard/ProfileEditor";
+import { ExtractorModal } from "@/components/dashboard/ExtractorModal";
+import { AdvisorDrawer } from "@/components/dashboard/AdvisorDrawer";
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<TabType>("overview");
-  const [profiles] = useState<StudentProfile[]>(SEED_PROFILES);
+  const [profiles, setProfiles] = useState<StudentProfile[]>(SEED_PROFILES);
   const [activeProfile, setActiveProfile] = useState<StudentProfile>(SEED_PROFILES[0]);
   const [opportunities, setOpportunities] = useState<Opportunity[]>(SEED_OPPORTUNITIES);
   const [savedIds, setSavedIds] = useState<string[]>(["opp-safeboda-01"]);
   const [appliedIds, setAppliedIds] = useState<string[]>(["opp-refactory-08"]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAdvisorDrawerOpen, setIsAdvisorDrawerOpen] = useState(false);
+
+  // Sync to local storage for persistence across reloads
+  useEffect(() => {
+    const saved = localStorage.getItem("internpilot_saved_ids");
+    if (saved) {
+      try { setSavedIds(JSON.parse(saved)); } catch (e) { /* ignore */ }
+    }
+    const applied = localStorage.getItem("internpilot_applied_ids");
+    if (applied) {
+      try { setAppliedIds(JSON.parse(applied)); } catch (e) { /* ignore */ }
+    }
+  }, []);
+
+  const handleToggleSave = (id: string) => {
+    setSavedIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      localStorage.setItem("internpilot_saved_ids", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleToggleApplied = (id: string) => {
+    setAppliedIds((prev) => {
+      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
+      localStorage.setItem("internpilot_applied_ids", JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handlePublishOpportunity = (newOpp: Omit<Opportunity, "id" | "created_at">) => {
+    const opp: Opportunity = {
+      ...newOpp,
+      id: `opp-extracted-${Date.now()}`,
+      created_at: new Date().toISOString().split("T")[0],
+    };
+    setOpportunities((prev) => [opp, ...prev]);
+    setActiveTab("opportunities");
+  };
+
+  const handleSaveProfile = (updatedProfile: StudentProfile) => {
+    setActiveProfile(updatedProfile);
+    setProfiles((prev) =>
+      prev.map((p) => (p.id === updatedProfile.id ? updatedProfile : p))
+    );
+  };
 
   // Calculate matching opportunities
   const matchedOpportunities = useMemo(() => {
@@ -67,7 +117,7 @@ export default function DashboardPage() {
           onSwitchProfile={(p) => setActiveProfile(p)}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          onOpenAdvisor={() => setActiveTab("advisor")}
+          onOpenAdvisor={() => setIsAdvisorDrawerOpen(true)}
           onOpenIngest={() => setActiveTab("ingest")}
         />
 
@@ -107,7 +157,7 @@ export default function DashboardPage() {
                     Paste Opportunity
                   </button>
                   <button
-                    onClick={() => setActiveTab("advisor")}
+                    onClick={() => setIsAdvisorDrawerOpen(true)}
                     className="glass-button px-4 py-2.5 rounded-xl text-xs font-semibold flex items-center gap-1.5"
                   >
                     <Sparkles className="w-4 h-4" />
@@ -199,73 +249,60 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {/* Placeholder containers for Phases 2, 3, 4 */}
+          {/* Phase 2: Opportunities Feed Tab */}
           {activeTab === "opportunities" && (
-            <div className="glass-card rounded-2xl p-8 text-center border">
-              <Briefcase className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white">Opportunities Feed (Phase 2)</h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                Ready for Phase 2: Filterable feed with countdown badges, skill-matching tags, and Save/Applied toggles.
-              </p>
-              <button
-                onClick={() => setActiveTab("overview")}
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-medium glass-button"
-              >
-                Back to Overview
-              </button>
-            </div>
+            <OpportunityFeed
+              opportunities={opportunities}
+              student={activeProfile}
+              savedIds={savedIds}
+              appliedIds={appliedIds}
+              onToggleSave={handleToggleSave}
+              onToggleApplied={handleToggleApplied}
+              onAskAboutOpportunity={() => setIsAdvisorDrawerOpen(true)}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              onOpenIngest={() => setActiveTab("ingest")}
+            />
           )}
 
+          {/* Phase 4: Grounded AI Advisor Tab */}
           {activeTab === "advisor" && (
-            <div className="glass-card rounded-2xl p-8 text-center border">
-              <Bot className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white">Grounded AI Advisor (Phase 4)</h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                Ready for Phase 4: Grounded chat advisor powered by Gemini 2.5 Flash strictly using database listings.
-              </p>
-              <button
-                onClick={() => setActiveTab("overview")}
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-medium glass-button"
-              >
-                Back to Overview
-              </button>
-            </div>
+            <AdvisorDrawer
+              student={activeProfile}
+              opportunities={opportunities}
+              isDrawer={false}
+            />
           )}
 
+          {/* Phase 3: Messy Post Extractor Tab */}
           {activeTab === "ingest" && (
-            <div className="glass-card rounded-2xl p-8 text-center border">
-              <Plus className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white">Messy Post Extractor (Phase 3)</h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                Ready for Phase 3: Paste raw WhatsApp or LinkedIn posts and extract structured JSON with Gemini.
-              </p>
-              <button
-                onClick={() => setActiveTab("overview")}
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-medium glass-button"
-              >
-                Back to Overview
-              </button>
-            </div>
+            <ExtractorModal
+              onPublish={handlePublishOpportunity}
+              onClose={() => setActiveTab("opportunities")}
+            />
           )}
 
+          {/* Student Profile Editor Tab */}
           {activeTab === "profile" && (
-            <div className="glass-card rounded-2xl p-8 text-center border">
-              <User className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
-              <h2 className="text-lg font-bold text-white">Student Profile Editor</h2>
-              <p className="text-xs text-gray-400 mt-1 max-w-md mx-auto">
-                Loaded: {activeProfile.name} • {activeProfile.course} ({activeProfile.university})
-              </p>
-              <button
-                onClick={() => setActiveTab("overview")}
-                className="mt-4 px-4 py-2 rounded-xl text-xs font-medium glass-button"
-              >
-                Back to Overview
-              </button>
-            </div>
+            <ProfileEditor
+              profile={activeProfile}
+              onSaveProfile={handleSaveProfile}
+              onSwitchProfile={(p) => setActiveProfile(p)}
+              profiles={profiles}
+            />
           )}
         </main>
 
-        {/* Mobile Bottom Navigation Bar (Low-bandwidth, one-handed navigation) */}
+        {/* Slide-over AI Advisor Drawer (accessible from any view) */}
+        <AdvisorDrawer
+          student={activeProfile}
+          opportunities={opportunities}
+          isOpen={isAdvisorDrawerOpen}
+          onClose={() => setIsAdvisorDrawerOpen(false)}
+          isDrawer={true}
+        />
+
+        {/* Mobile Bottom Navigation Bar */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-white/10 px-2 py-2 flex items-center justify-around">
           <button
             onClick={() => setActiveTab("overview")}
@@ -295,9 +332,9 @@ export default function DashboardPage() {
           </button>
 
           <button
-            onClick={() => setActiveTab("advisor")}
+            onClick={() => setIsAdvisorDrawerOpen(true)}
             className={`flex flex-col items-center gap-1 p-1.5 rounded-lg text-[10px] font-medium ${
-              activeTab === "advisor" ? "text-emerald-400" : "text-gray-400"
+              isAdvisorDrawerOpen ? "text-emerald-400" : "text-gray-400"
             }`}
           >
             <Bot className="w-4 h-4" />
@@ -318,4 +355,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
