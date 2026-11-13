@@ -187,3 +187,4 @@ function generateLocalGroundedAdvice(
 
   return `Based on your ${profile.course} background, I recommend applying for **${topMatch.title}** at **${topMatch.organization}**.\n\n- **Why it fits:** It aligns directly with your skills in ${topMatch.requirements.slice(0, 2).join(" & ")}.\n- **Deadline:** ${topMatch.deadline || "Rolling"}\n- **Concrete Next Step:** Review the eligibility requirements (${topMatch.eligibility}) and tailor your resume highlights to their stack!`;
 }
+

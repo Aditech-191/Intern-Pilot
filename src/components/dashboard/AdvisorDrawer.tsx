@@ -255,3 +255,4 @@ export const AdvisorDrawer: React.FC<AdvisorDrawerProps> = ({
 
   return <div className="max-w-4xl mx-auto h-[750px]">{content}</div>;
 };
+

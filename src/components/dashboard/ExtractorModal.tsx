@@ -292,3 +292,4 @@ export const ExtractorModal: React.FC<ExtractorModalProps> = ({ onPublish, onClo
     </div>
   );
 };
+

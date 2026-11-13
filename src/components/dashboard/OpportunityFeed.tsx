@@ -192,3 +192,4 @@ export const OpportunityFeed: React.FC<OpportunityFeedProps> = ({
     </div>
   );
 };
+
