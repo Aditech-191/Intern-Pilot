@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { Search, UserCheck, Plus, Sparkles, ChevronDown } from "lucide-react";
+import { Search, UserCheck, Plus, Sparkles, ChevronDown, LogIn, LogOut } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { StudentProfile } from "@/types";
 
 interface TopBarProps {
@@ -22,6 +24,17 @@ export const TopBar: React.FC<TopBarProps> = ({
   onOpenIngest,
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      router.push("/login");
+      router.refresh();
+    } catch (e) {
+      router.push("/login");
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 w-full glass-panel border-b border-white/5 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
@@ -133,6 +146,25 @@ export const TopBar: React.FC<TopBarProps> = ({
                     </button>
                   );
                 })}
+              </div>
+
+              <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between px-1">
+                <Link
+                  href="/login"
+                  onClick={() => setShowDropdown(false)}
+                  className="text-[11px] text-gray-400 hover:text-emerald-300 flex items-center gap-1.5 p-1.5 rounded-lg"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Switch / Sign In</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="text-[11px] text-rose-400 hover:text-rose-300 flex items-center gap-1.5 p-1.5 rounded-lg"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
               </div>
             </div>
           )}
