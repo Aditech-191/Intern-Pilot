@@ -2,8 +2,8 @@ import { StudentProfile, Opportunity } from "@/types";
 
 export const SEED_PROFILES: StudentProfile[] = [
   {
-    id: "student-brian-okello",
-    name: "Brian Okello",
+    id: "student-alex-omondi",
+    name: "Alex Omondi",
     university: "Makerere University",
     course: "BSc. Software Engineering",
     year_of_study: 3,

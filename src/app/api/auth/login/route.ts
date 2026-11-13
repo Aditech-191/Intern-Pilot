@@ -4,43 +4,34 @@ import { AUTH_COOKIE_NAME, autoProvisionStudentProfile } from "@/lib/auth";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { mode, email, password, name, isDemo } = body;
+    const { mode, email, password, name } = body;
 
     let userSession;
 
-    if (isDemo) {
-      userSession = {
-        userId: "student-brian-okello",
-        email: "brian.okello@mak.ac.ug",
-        name: "Brian Okello",
-        role: "student" as const,
-      };
-    } else {
-      if (!email || !email.includes("@")) {
-        return NextResponse.json(
-          { error: "Please provide a valid student or university email." },
-          { status: 400 }
-        );
-      }
-
-      if (!password || password.length < 6) {
-        return NextResponse.json(
-          { error: "Password must be at least 6 characters." },
-          { status: 400 }
-        );
-      }
-
-      if (mode === "signup") {
-        await autoProvisionStudentProfile(name || email.split("@")[0], email);
-      }
-
-      userSession = {
-        userId: `student-${email}`,
-        email: email.toLowerCase().trim(),
-        name: name || email.split("@")[0],
-        role: "student" as const,
-      };
+    if (!email || !email.includes("@")) {
+      return NextResponse.json(
+        { error: "Please provide a valid student or university email." },
+        { status: 400 }
+      );
     }
+
+    if (!password || password.length < 6) {
+      return NextResponse.json(
+        { error: "Password must be at least 6 characters." },
+        { status: 400 }
+      );
+    }
+
+    if (mode === "signup") {
+      await autoProvisionStudentProfile(name || email.split("@")[0], email);
+    }
+
+    userSession = {
+      userId: `student-${email}`,
+      email: email.toLowerCase().trim(),
+      name: name || email.split("@")[0],
+      role: "student" as const,
+    };
 
     const encoded = Buffer.from(JSON.stringify(userSession)).toString("base64");
 

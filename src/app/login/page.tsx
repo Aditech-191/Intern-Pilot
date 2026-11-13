@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Compass,
 } from "lucide-react";
+// Sparkles kept for right overlay panel only
 import { sanitizeRedirect } from "@/lib/auth-client";
 
 function LoginForm() {
@@ -29,7 +30,6 @@ function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isDemoLoading, setIsDemoLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,31 +61,6 @@ function LoginForm() {
       setErrorMsg("Network error. Please try again.");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setErrorMsg("");
-    setIsDemoLoading(true);
-
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isDemo: true }),
-      });
-
-      if (!res.ok) {
-        setErrorMsg("Demo login unavailable. Try manual login.");
-        return;
-      }
-
-      router.push(targetUrl);
-      router.refresh();
-    } catch {
-      setErrorMsg("Failed to initialize demo session.");
-    } finally {
-      setIsDemoLoading(false);
     }
   };
 
@@ -163,7 +138,7 @@ function LoginForm() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Student Email (e.g. brian@mak.ac.ug)"
+                    placeholder="Student Email (e.g. student@university.ac.ug)"
                     className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
                   />
                 </div>
@@ -199,22 +174,7 @@ function LoginForm() {
                   )}
                 </button>
 
-                {/* 1-Click Demo Safeguard Button */}
-                <button
-                  type="button"
-                  onClick={handleDemoLogin}
-                  disabled={isDemoLoading}
-                  className="w-full py-2.5 rounded-xl border border-emerald-500/30 text-emerald-300 bg-emerald-500/10 hover:bg-emerald-500/20 text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-                >
-                  {isDemoLoading ? (
-                    <div className="w-3.5 h-3.5 border-2 border-emerald-300 border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>1-Click Demo Student Login</span>
-                    </>
-                  )}
-                </button>
+                {/* 1-Click Demo button removed */}
               </form>
 
               {/* Mobile Toggle */}
