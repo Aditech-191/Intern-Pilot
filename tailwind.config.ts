@@ -10,8 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "#0B1210",
-        surface: "#111A17",
+        background: "var(--background)",
+        surface: "var(--surface)",
         "surface-card": "rgba(17, 26, 23, 0.75)",
         "surface-border": "rgba(255, 255, 255, 0.08)",
         emerald: {

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { Search, UserCheck, Plus, Sparkles, ChevronDown, LogIn, LogOut } from "lucide-react";
+import { Search, UserCheck, Plus, Sparkles, ChevronDown, LogIn, LogOut, Sun, Moon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { StudentProfile } from "@/types";
+import { useTheme } from "@/lib/theme-context";
 
 interface TopBarProps {
   activeProfile: StudentProfile;
@@ -25,6 +26,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
+  const { theme, toggle: toggleTheme } = useTheme();
 
   const handleSignOut = async () => {
     try {
@@ -37,7 +39,7 @@ export const TopBar: React.FC<TopBarProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full glass-panel border-b border-white/5 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-30 w-full glass-panel border-b border-white/5 dark:border-white/5 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
       {/* Search Input */}
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -46,7 +48,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search internships, skills (e.g. React, Python), or orgs..."
-          className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-surface/90 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+          className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl bg-white/80 dark:bg-surface/90 border border-black/10 dark:border-white/10 text-gray-800 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
         />
       </div>
 
@@ -70,6 +72,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           <Sparkles className="w-3.5 h-3.5 fill-black" />
           <span className="hidden sm:inline">Ask Advisor</span>
           <span className="sm:hidden">AI</span>
+        </button>
+
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          title={theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className="p-2 rounded-xl glass-button border border-white/10 dark:border-white/10 hover:border-emerald-500/40 transition-all text-gray-400 hover:text-emerald-400"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4" />
+          ) : (
+            <Moon className="w-4 h-4" />
+          )}
         </button>
 
         {/* Demo Student Profile Switcher Pill */}

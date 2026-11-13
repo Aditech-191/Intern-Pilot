@@ -9,6 +9,35 @@
   --emerald-accent: #10B981;
 }
 
+/* Light mode overrides */
+html:not(.dark) {
+  --background: #F0FBF6;
+  --surface: #FFFFFF;
+  --foreground: #0F1A16;
+  --emerald-accent: #059669;
+}
+
+html:not(.dark) body {
+  background: #F0FBF6;
+  color: #0F1A16;
+}
+
+html:not(.dark) .glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+html:not(.dark) .glass-card {
+  background: rgba(255, 255, 255, 0.80);
+  border-color: rgba(16, 185, 129, 0.15);
+  color: #0F1A16;
+}
+
+html:not(.dark) .glass-card:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(16, 185, 129, 0.40);
+}
+
 body {
   color: var(--foreground);
   background: var(--background);
