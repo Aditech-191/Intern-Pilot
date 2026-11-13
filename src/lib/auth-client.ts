@@ -5,3 +5,4 @@ export function sanitizeRedirect(url: string | null | undefined): string {
   }
   return "/";
 }
+
