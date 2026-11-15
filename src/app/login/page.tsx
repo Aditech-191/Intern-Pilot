@@ -29,6 +29,7 @@ function LoginForm() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [honeypot, setHoneypot] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -46,6 +47,7 @@ function LoginForm() {
           name,
           email,
           password,
+          _hp_verify: honeypot,
         }),
       });
 
@@ -131,6 +133,17 @@ function LoginForm() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
+                {/* Honeypot field for bot spam deterrence */}
+                <input
+                  type="text"
+                  name="_hp_verify"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="hidden pointer-events-none"
+                  aria-hidden="true"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                   <input
@@ -228,6 +241,17 @@ function LoginForm() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-3.5">
+                {/* Honeypot field for bot spam deterrence */}
+                <input
+                  type="text"
+                  name="_hp_verify"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="hidden pointer-events-none"
+                  aria-hidden="true"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                />
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                   <input

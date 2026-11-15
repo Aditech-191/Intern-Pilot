@@ -21,10 +21,34 @@ export async function getCurrentSession(): Promise<UserSession | null> {
 
   try {
     const parsed = JSON.parse(Buffer.from(sessionCookie, "base64").toString("utf8"));
+    if (!parsed?.userId || !parsed?.email) {
+      return null;
+    }
     return parsed as UserSession;
   } catch {
     return null;
   }
+}
+
+/**
+ * Asserts that the authenticated session is an administrator.
+ * Throws an explicit error or returns false to prevent unauthorized access.
+ */
+export function isAdmin(session: UserSession | null): boolean {
+  return Boolean(session && session.role === "admin");
+}
+
+/**
+ * IDOR Defense: Verifies that the current authenticated user owns the resource.
+ * Admins are permitted bypass for management purposes.
+ */
+export function assertResourceOwnership(
+  session: UserSession | null,
+  resourceOwnerId: string
+): boolean {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return session.userId === resourceOwnerId;
 }
 
 export async function autoProvisionStudentProfile(

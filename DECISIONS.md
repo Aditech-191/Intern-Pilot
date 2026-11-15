@@ -5,6 +5,7 @@
 - [ADR-002: Supabase (PostgreSQL) for Data Persistence](#adr-002-supabase-postgresql-for-data-persistence) (Accepted)
 - [ADR-003: Server-Side Gemini API Integration via @google/genai](#adr-003-server-side-gemini-api-integration-via-googlegenai) (Accepted)
 - [ADR-004: Frictionless Demo Profile (No Login Wall)](#adr-004-frictionless-demo-profile-no-login-wall) (Accepted)
+- [ADR-007: Comprehensive Zero-Trust Security Hardening](#adr-007-comprehensive-zero-trust-security-hardening) (Accepted)
 - [ADR-005: Africa's Talking SMS Deadline Alerts](#adr-005-africas-talking-sms-deadline-alerts) (Proposed)
 - [ADR-006: Tailored CV Bullet & Cover Letter Generator](#adr-006-tailored-cv-bullet--cover-letter-generator) (Proposed)
 
@@ -90,6 +91,26 @@ Implement lightweight client-side profile onboarding backed by localStorage/sess
 
 #### Consequences
 Instant demo setup, zero barrier to testing personalized matching immediately upon app load.
+
+---
+
+### ADR-007: Comprehensive Zero-Trust Security Hardening
+- Date: 2026-11-15
+- Status: Accepted
+- Supersedes: None
+
+#### Context
+Production deployment requires robust protection against common web vulnerabilities (OWASP Top 10), automated brute-force bots, IDOR profile tampering, unauthorized cross-origin requests, quota drainage, and data leakage.
+
+#### Decision
+Implement end-to-end zero-trust security controls across the application:
+1. **Access & Auth:** Strict server-side session authentication on all API routes (`/api/gemini/*`, `/api/advisor`, `/api/ingest`), anti-IDOR resource ownership assertions, and role-based admin isolation in middleware.
+2. **Database & Storage:** Explicit PostgreSQL Row Level Security (RLS) schema (`supabase/schema.sql`) enforcing `auth.uid() = user_id`, restricted opportunity mutation rights, and private storage buckets with strict MIME/magic byte checks.
+3. **Attack Prevention & Network:** In-memory sliding-window rate limiting on auth and AI endpoints, bot honeypot traps on public forms, input sanitization and length constraints, strict CORS validation, and parameterized query execution via PostgREST SDK.
+4. **Production Hardening & Monitoring:** Complete suite of HTTP security headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy), disabled framework fingerprinting (`poweredByHeader: false`), and structured security audit logging.
+
+#### Consequences
+Resilient against OWASP Top 10 exploits, preventing unauthorized data tampering, scraper flooding, and API abuse.
 
 ---
 

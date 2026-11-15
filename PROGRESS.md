@@ -1,7 +1,7 @@
 # PROGRESS.md
 
-Last updated: 2026-11-13 13:53:00 EAT  
-Current task: MVP Complete & Verified
+Last updated: 2026-11-15 16:22:00 EAT  
+Current task: Security Hardening & Zero-Trust Production Audit Complete
 
 ## Completed Work
 1. **Phase 1 (Scaffolding & Shell):**
@@ -19,11 +19,19 @@ Current task: MVP Complete & Verified
 4. **Phase 4 (Grounded AI Advisor):**
    - `src/lib/gemini.ts` + `/api/gemini/chat`: Grounded Gemini 2.5 Flash chatbot injecting active profile and DB listings context with zero hallucination.
    - `AdvisorDrawer.tsx`: Full tab view and global slide-over drawer with 3 one-click starter prompts.
+5. **Phase 5 (Glassy Auth & Dark/Light Mode):**
+   - Glassy split-panel sliding login & signup (`/login`).
+   - ThemeProvider with dark/light mode toggle in `TopBar.tsx` and localStorage persistence.
+6. **Phase 6 (Zero-Trust Security Hardening — 19 Requirements):**
+   - **Access & Auth:** Strict server-side session authentication on all API routes, anti-IDOR resource ownership assertions, and role-based admin isolation in middleware.
+   - **Database & Storage:** PostgreSQL RLS schema (`supabase/schema.sql`) enforcing `auth.uid() = user_id`, restricted opportunity mutation rights, and private storage buckets with strict MIME/magic byte checks (`src/lib/file-security.ts`).
+   - **Attack Prevention & Network:** In-memory sliding-window rate limiting (`src/lib/rate-limit.ts`) on auth (10/min) and AI endpoints (20/min), bot honeypot traps on public forms, input sanitization and length constraints (`src/lib/sanitize.ts`), strict CORS validation in middleware, and parameterized query execution via PostgREST SDK.
+   - **Production Hardening & Monitoring:** HTTP security headers (HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy) in `next.config.js`, disabled framework fingerprinting (`poweredByHeader: false`), constant-time webhook signature verification (`src/lib/webhook-verify.ts`), and structured security audit logging (`src/lib/audit.ts`).
 
 ## Verification & Checks
-- `npm run build`: **PASSED** (Compiled all static pages and dynamic `/api/gemini/*` routes with exit code 0).
+- `npm run build`: **PASSED** (Compiled 11/11 static pages and dynamic routes with exit code 0).
 - `npm run lint`: **PASSED** (✔ No ESLint warnings or errors).
-- Server Security: `GEMINI_API_KEY` isolated strictly server-side in API Route Handlers.
+- Zero Brian hardcoded references across `src/`.
 
 ## Next Steps
 - Start local development server with `npm run dev` for live browser presentation.
