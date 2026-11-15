@@ -1,10 +1,10 @@
 # TASKS.md
 
 ## MVP goal
-A university student in Uganda can load or configure their profile (course, year, skills), explore a verified feed of Ugandan tech internships with deadline countdowns, extract a new listing from a raw WhatsApp/LinkedIn post with Gemini 2.5 Flash, and receive personalized career advice from a grounded Gemini advisor citing exclusively real database listings.
+A university student in Uganda can load or configure their profile (course, year, skills), explore a verified feed of Ugandan tech internships with deadline countdowns, extract a new listing from a raw WhatsApp/LinkedIn post with Gemini 2.5 Flash, receive personalized career advice from a grounded Gemini advisor citing exclusively real database listings, toggle between dark/light themes, and securely authenticate within a zero-trust hardened environment.
 
 ## Current task
-All MVP tasks completed and verified.
+All MVP, UI/UX refinement, and security hardening tasks completed and verified.
 
 ## Completed Tasks
 
@@ -44,6 +44,44 @@ All MVP tasks completed and verified.
   - [x] `src/app/api/gemini/chat/route.ts` Route Handler created with 12s timeout and fallback advice.
   - [x] `src/components/dashboard/AdvisorDrawer.tsx` provides slide-over drawer and full tab view with 3 starter prompts and conversational interface.
   - [x] `npm run build` and `npm run lint` pass with zero errors (verified).
+
+### T-005: Glassy Split-Panel Auth & Session Management (Phase 5)
+- Priority: P1
+- Status: Done
+- Acceptance criteria:
+  - [x] Responsive dual-panel glassmorphic login & registration page at `src/app/login/page.tsx`.
+  - [x] Server-side login/signup route (`src/app/api/auth/login/route.ts`) with session cookie management.
+  - [x] Server-side logout route (`src/app/api/auth/logout/route.ts`) with cookie expiration.
+  - [x] Client session decoding in `src/lib/auth-client.ts` and server auth in `src/lib/auth.ts`.
+  - [x] Route redirection in `src/middleware.ts` for authed users visiting `/login`.
+  - [x] Removed all hardcoded Brian identity references across codebase.
+
+### T-006: Theme Switcher: Dark & Light Mode (Phase 6)
+- Priority: P2
+- Status: Done
+- Acceptance criteria:
+  - [x] `ThemeProvider` context in `src/lib/theme-context.tsx` with `toggle()` and localStorage persistence (`ip-theme`).
+  - [x] System preference `prefers-color-scheme` detection on initial load.
+  - [x] TopBar Sun/Moon toggle button with smooth iconography transitions.
+  - [x] High-contrast light mode tokens (`#F0FBF6` background, crisp white cards, emerald borders).
+  - [x] `npm run build` verified.
+
+### T-007: Zero-Trust Security Hardening (Phase 7)
+- Priority: P0
+- Status: Done
+- Acceptance criteria:
+  - [x] PostgreSQL Row Level Security (RLS) schema and private storage bucket policy in `supabase/schema.sql`.
+  - [x] Server-side auth checks on all API endpoints (`/api/gemini/*`, `/api/advisor`, `/api/ingest`).
+  - [x] Anti-IDOR assertions in `src/lib/auth.ts` preventing cross-user profile tampering.
+  - [x] Server-side admin role guard in `src/middleware.ts` intercepting `/admin` and `/api/admin`.
+  - [x] Sliding-window rate limiter in `src/lib/rate-limit.ts` (10/min auth, 20/min AI).
+  - [x] Server-side input sanitization and XSS protection in `src/lib/sanitize.ts`.
+  - [x] Anti-bot honeypot field `_hp_verify` in `src/app/login/page.tsx` and login route.
+  - [x] HTTP Security headers (HSTS, CSP, X-Frame-Options, nosniff) and `poweredByHeader: false` in `next.config.js`.
+  - [x] Constant-time HMAC signature verification in `src/lib/webhook-verify.ts`.
+  - [x] PDF magic-byte validation and 5MB ceiling in `src/lib/file-security.ts`.
+  - [x] Structured security audit logger in `src/lib/audit.ts`.
+  - [x] Parameterized SQL query enforcement via Supabase PostgREST SDK.
 
 ## Later (Post-Hackathon)
 - SMS / WhatsApp deadline reminders via Africa's Talking API.
