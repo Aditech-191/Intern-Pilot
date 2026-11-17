@@ -34,6 +34,9 @@ export interface StudentProfile {
   course: string;
   year_of_study: number | null;
   cgpa?: string;
+  avatarDataUrl?: string | null;
+  linkedinUrl?: string;
+  githubUrl?: string;
   skills: string[];
   interests: string[];
   experience_summary: string;

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { FilePlus2, UserPen, ArrowLeftRight } from "lucide-react";
+import { FilePlus2, UserPen, ArrowLeftRight, Linkedin, Github } from "lucide-react";
 import heroCampusImg from "@/assets/images/hero_kampala_campus_1794946019642.jpg";
 import { StudentProfile } from "@/types";
 
@@ -60,20 +60,61 @@ export function DiscoverHero({
       />
 
       <div className="relative z-10 w-full p-5 sm:p-7 flex flex-col lg:flex-row lg:items-end justify-between gap-5">
-        <div className="max-w-2xl space-y-2">
-          <p className="text-xs font-medium text-[#C8EFE0] tracking-wide">
-            {academicSummary || "CrestPath · Personal Uganda Career Workspace"}
-          </p>
+        <div className="max-w-2xl flex items-start gap-4">
+          {profile.avatarDataUrl && (
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl border border-white/30 overflow-hidden shrink-0 bg-[#0D523E]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={profile.avatarDataUrl}
+                alt={profile.name ? `${profile.name} avatar` : "Student avatar"}
+                referrerPolicy="no-referrer"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
 
-          <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F6F3EB] tracking-tight [text-wrap:balance]">
-            {hasName
-              ? `Welcome back, ${profile.name.trim()}`
-              : "Your Ugandan internship & scholarship hub"}
-          </h1>
+          <div className="space-y-2 min-w-0">
+            <p className="text-xs font-medium text-[#C8EFE0] tracking-wide">
+              {academicSummary || "Intern Pilot · Personal Uganda Career Workspace"}
+            </p>
 
-          <p className="text-sm text-[#D8E2DD] leading-relaxed">
-            {skillSummary}
-          </p>
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#F6F3EB] tracking-tight [text-wrap:balance]">
+              {hasName
+                ? `Welcome back, ${profile.name.trim()}`
+                : "Your Ugandan internship & scholarship hub"}
+            </h1>
+
+            <p className="text-sm text-[#D8E2DD] leading-relaxed">
+              {skillSummary}
+            </p>
+
+            {(profile.linkedinUrl || profile.githubUrl) && (
+              <div className="flex flex-wrap items-center gap-4 pt-0.5 text-xs font-medium text-[#C8EFE0]">
+                {profile.linkedinUrl && (
+                  <a
+                    href={profile.linkedinUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 hover:text-white underline-offset-2 hover:underline"
+                  >
+                    <Linkedin className="w-3.5 h-3.5" />
+                    LinkedIn
+                  </a>
+                )}
+                {profile.githubUrl && (
+                  <a
+                    href={profile.githubUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 hover:text-white underline-offset-2 hover:underline"
+                  >
+                    <Github className="w-3.5 h-3.5" />
+                    GitHub
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">

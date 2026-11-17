@@ -126,7 +126,7 @@ function CrestPathLoginForm() {
                 <Compass className="w-5 h-5" />
               </span>
               <span className="font-display text-lg font-bold text-[#F6F3EB] tracking-tight">
-                CrestPath
+                Intern Pilot
               </span>
             </div>
 
@@ -167,7 +167,7 @@ function CrestPathLoginForm() {
             <div className="max-w-sm w-full mx-auto space-y-6">
               <div>
                 <h1 className="font-display text-2xl font-bold text-ink tracking-tight">
-                  {isSignUp ? "Create your student account" : "Sign in to CrestPath"}
+                  {isSignUp ? "Create your student account" : "Sign in to Intern Pilot"}
                 </h1>
                 <p className="text-sm text-ink-secondary mt-1">
                   {isSignUp
@@ -302,7 +302,7 @@ function CrestPathLoginForm() {
                 >
                   {isSignUp
                     ? "Already have an account? Sign in"
-                    : "New to CrestPath? Create an account"}
+                    : "New to Intern Pilot? Create an account"}
                 </button>
               </div>
             </div>
@@ -318,7 +318,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-secondary text-sm">
-          Loading CrestPath...
+          Loading Intern Pilot...
         </div>
       }
     >

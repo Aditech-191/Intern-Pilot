@@ -25,11 +25,11 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CrestPath — Career Hub for Ugandan University Students",
+  title: "Intern Pilot — Career Hub for Ugandan University Students",
   description:
     "AI-guided career hub empowering Ugandan university students to structure, track, and evaluate internships, scholarships, and fellowships on time.",
   openGraph: {
-    title: "CrestPath — Career Hub for Ugandan University Students",
+    title: "Intern Pilot — Career Hub for Ugandan University Students",
     description:
       "Structure pasted opportunity forwards, measure skill alignment, filter across Uganda regions, and get grounded career advice.",
   },

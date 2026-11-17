@@ -26,6 +26,10 @@ import {
   getDeadlineInfo,
 } from "@/lib/opportunity-utils";
 import {
+  WorkspaceBackupPayload,
+  mergeWorkspaceData,
+} from "@/lib/profile-portability";
+import {
   CrestPathTab,
   NavigationShell,
 } from "@/components/crestpath/NavigationShell";
@@ -393,6 +397,34 @@ export default function CrestPathWorkspacePage() {
     setActiveProfileId(created.id);
   };
 
+  const handleImportWorkspace = (
+    payload: WorkspaceBackupPayload,
+    mode: "replace" | "merge"
+  ) => {
+    if (mode === "replace") {
+      setOpportunities(payload.opportunities);
+      setTrackingMap(payload.trackingMap);
+      setProfiles(payload.profiles);
+      setActiveProfileId(payload.activeProfileId);
+      setSelectedOpportunityId(payload.opportunities[0]?.id ?? null);
+    } else {
+      const merged = mergeWorkspaceData(
+        {
+          profiles,
+          activeProfileId,
+          opportunities,
+          trackingMap,
+        },
+        payload
+      );
+      setOpportunities(merged.opportunities);
+      setTrackingMap(merged.trackingMap);
+      setProfiles(merged.profiles);
+      setActiveProfileId(merged.activeProfileId);
+    }
+    handleClearAllFilters();
+  };
+
   const handleResetWorkspace = () => {
     const fresh = createBlankProfile("profile-primary");
     setOpportunities([]);
@@ -429,6 +461,7 @@ export default function CrestPathWorkspacePage() {
       onSelectTab={setActiveTab}
       opportunityCount={opportunities.length}
       profileName={activeProfile.name}
+      profileAvatar={activeProfile.avatarDataUrl}
       sessionEmail={sessionEmail}
     >
       {activeTab === "discover" && (
@@ -573,7 +606,7 @@ export default function CrestPathWorkspacePage() {
                   Your workspace starts clean
                 </h2>
                 <p className="text-sm text-ink-secondary leading-relaxed">
-                  CrestPath contains zero dummy listings. Paste a WhatsApp
+                  Intern Pilot contains zero dummy listings. Paste a WhatsApp
                   forward or LinkedIn post—or enter an internship or scholarship
                   manually—to start tracking deadlines and skill alignment.
                 </p>
@@ -723,10 +756,13 @@ export default function CrestPathWorkspacePage() {
         <ProfileSettingsView
           profiles={profiles}
           activeProfile={activeProfile}
+          opportunities={opportunities}
+          trackingMap={trackingMap}
           sessionEmail={sessionEmail}
           onSaveProfile={handleSaveProfile}
           onSwitchProfile={setActiveProfileId}
           onCreateProfile={handleCreateProfile}
+          onImportWorkspace={handleImportWorkspace}
           onResetWorkspace={handleResetWorkspace}
         />
       )}

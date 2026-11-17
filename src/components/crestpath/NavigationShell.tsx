@@ -20,6 +20,7 @@ interface NavigationShellProps {
   onSelectTab: (tab: CrestPathTab) => void;
   opportunityCount: number;
   profileName: string;
+  profileAvatar?: string | null;
   sessionEmail?: string | null;
   children: React.ReactNode;
 }
@@ -40,6 +41,7 @@ export function NavigationShell({
   onSelectTab,
   opportunityCount,
   profileName,
+  profileAvatar,
   sessionEmail,
   children,
 }: NavigationShellProps) {
@@ -59,13 +61,13 @@ export function NavigationShell({
               type="button"
               onClick={() => onSelectTab("discover")}
               className="flex items-center gap-2.5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-[10px]"
-              aria-label="CrestPath Home"
+              aria-label="Intern Pilot Home"
             >
               <span className="w-9 h-9 rounded-[10px] bg-primary text-white dark:text-[#04261D] flex items-center justify-center shrink-0">
                 <Compass className="w-5 h-5" />
               </span>
               <span className="hidden lg:inline font-display font-bold text-lg tracking-tight text-ink whitespace-nowrap">
-                CrestPath
+                Intern Pilot
               </span>
             </button>
           </div>
@@ -132,8 +134,18 @@ export function NavigationShell({
               className="w-full min-h-[44px] px-3 rounded-[10px] flex items-center justify-center lg:justify-start gap-2.5 text-left hover:bg-surface-low transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
               aria-label="Open profile settings"
             >
-              <span className="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-container font-display font-bold text-xs flex items-center justify-center shrink-0">
-                {(profileName || sessionEmail).slice(0, 1).toUpperCase()}
+              <span className="w-7 h-7 rounded-full bg-secondary-container text-on-secondary-container font-display font-bold text-xs flex items-center justify-center shrink-0 overflow-hidden">
+                {profileAvatar ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={profileAvatar}
+                    alt="Profile"
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  (profileName || sessionEmail).slice(0, 1).toUpperCase()
+                )}
               </span>
               <span className="hidden lg:block min-w-0">
                 <span className="block text-xs font-semibold text-ink truncate">
@@ -162,13 +174,13 @@ export function NavigationShell({
           type="button"
           onClick={() => onSelectTab("discover")}
           className="flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-[10px]"
-          aria-label="CrestPath"
+          aria-label="Intern Pilot"
         >
           <span className="w-7 h-7 rounded-[8px] bg-primary text-white dark:text-[#04261D] flex items-center justify-center shrink-0">
             <Compass className="w-4 h-4" />
           </span>
           <span className="font-display font-bold text-base tracking-tight text-ink whitespace-nowrap">
-            CrestPath
+            Intern Pilot
           </span>
         </button>
 

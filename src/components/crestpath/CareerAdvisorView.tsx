@@ -160,7 +160,7 @@ export function CareerAdvisorView({
         <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
         <p className="text-xs sm:text-sm text-ink leading-relaxed">
           <strong>Workspace-Only Grounding:</strong> The advisor answers
-          strictly from the opportunities you have added to CrestPath and never
+          strictly from the opportunities you have added to Intern Pilot and never
           invents external listings, application links, or deadlines.
         </p>
       </div>
@@ -177,7 +177,7 @@ export function CareerAdvisorView({
                 No opportunities in your workspace yet
               </h2>
               <p className="text-sm text-ink-secondary leading-relaxed">
-                Because CrestPath never invents listings or uses dummy data, add
+                Because Intern Pilot never invents listings or uses dummy data, add
                 at least one internship, scholarship, or fellowship first so the
                 advisor can compare it against your skills and deadlines.
               </p>
@@ -324,7 +324,7 @@ export function CareerAdvisorView({
             disabled={isLoading}
             placeholder={
               opportunities.length === 0
-                ? "Add an opportunity in Parse Post first, or ask how CrestPath matches roles..."
+                ? "Add an opportunity in Parse Post first, or ask how Intern Pilot matches roles..."
                 : "Ask about match fit, missing skills, or deadlines..."
             }
             className="flex-1 min-h-[44px] rounded-xl border border-outline bg-surface px-4 text-sm text-ink placeholder:text-ink-secondary/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
