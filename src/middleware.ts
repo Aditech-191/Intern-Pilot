@@ -11,13 +11,15 @@ export function middleware(request: NextRequest) {
   if (pathname.startsWith("/api/")) {
     const origin = request.headers.get("origin");
     const host = request.headers.get("host");
+    const forwardedHost = request.headers.get("x-forwarded-host");
 
     if (origin && host) {
       try {
         const originHost = new URL(origin).host;
-        // Verify that the origin matches the application host or configured domain
-        const allowedHosts = [host, "localhost:3000", "internpilot.vercel.app"];
-        if (!allowedHosts.includes(originHost)) {
+        // Verify that the origin matches the application host, forwarded proxy host, or configured domain
+        const allowedHosts = [host, forwardedHost, "localhost:3000", "internpilot.vercel.app"].filter(Boolean);
+        const isAllowedProxyHost = originHost.endsWith(".run.app");
+        if (!allowedHosts.includes(originHost) && !isAllowedProxyHost) {
           return NextResponse.json(
             { error: "Cross-Origin Request Blocked by Security Policy." },
             { status: 403 }
@@ -56,20 +58,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // 3. API Auth Enforcement for AI & Ingestion services
-  const isProtectedApi =
-    pathname.startsWith("/api/gemini") ||
-    pathname.startsWith("/api/advisor") ||
-    pathname.startsWith("/api/ingest");
-
-  if (isProtectedApi && !session) {
-    return NextResponse.json(
-      { error: "Authentication required to access InternPilot AI services." },
-      { status: 401 }
-    );
-  }
-
-  // 4. Redirect authed users away from /login
+  // 3. Redirect authed users away from /login
   if (pathname === "/login" && session) {
     const redirectParam = searchParams.get("redirect");
     const safeUrl = sanitizeRedirect(redirectParam);

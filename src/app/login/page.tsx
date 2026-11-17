@@ -1,31 +1,37 @@
 "use client";
 
 import React, { useState, Suspense } from "react";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
+  Compass,
   Mail,
   Lock,
   User,
   Eye,
   EyeOff,
-  Sparkles,
-  ArrowRight,
   AlertCircle,
-  Compass,
+  ShieldCheck,
+  MapPin,
+  FileText,
+  ArrowLeft,
+  Sun,
+  Moon,
 } from "lucide-react";
-// Sparkles kept for right overlay panel only
+import authCampusImg from "@/assets/images/auth_scholar_campus_1794946021243.jpg";
 import { sanitizeRedirect } from "@/lib/auth-client";
+import { useTheme } from "@/lib/theme-context";
 
-function LoginForm() {
+function CrestPathLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const rawRedirect = searchParams.get("redirect");
-  const targetUrl = sanitizeRedirect(rawRedirect);
+  const { theme, toggle } = useTheme();
+  const targetUrl = sanitizeRedirect(searchParams.get("redirect"));
 
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Form states
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -53,7 +59,9 @@ function LoginForm() {
 
       const json = await res.json();
       if (!res.ok) {
-        setErrorMsg(json.error || "Authentication failed. Please check your credentials.");
+        setErrorMsg(
+          json.error || "Authentication failed. Please verify your details."
+        );
         return;
       }
 
@@ -67,73 +75,118 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-screen flex items-center justify-center p-4 bg-[#080D0B] text-white relative overflow-hidden selection:bg-emerald-500/30">
-      {/* Subtle emerald ambient glows */}
-      <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Main Glass Dual-Panel Container */}
-      <div className="relative max-w-[860px] w-full min-h-[540px] rounded-3xl overflow-hidden border border-white/10 backdrop-blur-xl bg-white/[0.03] shadow-2xl flex flex-col md:flex-row">
-        
-        {/* ================= DESKTOP SLIDING OVERLAY CONTAINER ================= */}
-        {/* LEFT PANEL */}
-        <div
-          className={`flex-1 p-8 sm:p-12 flex flex-col justify-center transition-all duration-500 ease-in-out ${
-            isSignUp
-              ? "order-2 md:order-1 bg-gradient-to-br from-emerald-950/60 to-surface/90 border-r border-white/5 text-center items-center"
-              : "order-1 md:order-1 bg-transparent"
-          }`}
+    <div className="min-h-screen bg-canvas text-ink flex flex-col">
+      {/* Clean Minimal Top Header */}
+      <header className="w-full max-w-[1120px] mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-4">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm font-medium text-ink-secondary hover:text-ink transition-colors whitespace-nowrap"
         >
-          {isSignUp ? (
-            /* Left Overlay State when Create Account is Active */
-            <div className="max-w-xs space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-300">
-                <Compass className="w-6 h-6 stroke-[2.2]" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                WELCOME BACK!
-              </h2>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                Already a member? Please login with your student credentials to track your opportunities.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setErrorMsg("");
-                  setIsSignUp(false);
-                }}
-                className="mt-4 inline-flex items-center gap-1.5 border border-white/25 rounded-full px-7 py-2.5 text-xs font-semibold hover:bg-white/10 transition-all text-white"
-              >
-                Sign In &rarr;
-              </button>
-            </div>
+          <ArrowLeft className="w-4 h-4" />
+          Back to Workspace
+        </Link>
+
+        <button
+          type="button"
+          onClick={toggle}
+          aria-label={
+            theme === "dark" ? "Switch to light theme" : "Switch to dark theme"
+          }
+          className="w-10 h-10 rounded-[10px] border border-outline bg-surface text-ink-secondary hover:text-ink flex items-center justify-center transition-colors"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 text-secondary" />
           ) : (
-            /* Left Form State when Sign In is Active */
-            <div className="w-full max-w-sm mx-auto space-y-5">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <Compass className="w-3.5 h-3.5 stroke-[2.5]" />
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                    InternPilot
+            <Moon className="w-4 h-4" />
+          )}
+        </button>
+      </header>
+
+      {/* Main Editorial Card */}
+      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pb-10">
+        <div className="w-full max-w-[980px] rounded-[24px] border border-outline bg-surface overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
+          {/* Left Column: Campus Artwork & Trust Highlights */}
+          <div className="lg:col-span-6 relative bg-[#0B221B] flex flex-col justify-between min-h-[260px] lg:min-h-[560px]">
+            <Image
+              src={authCampusImg}
+              alt="Ugandan university scholars walking along a sunlit stone campus colonnade"
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 500px"
+              referrerPolicy="no-referrer"
+              className="object-cover object-center"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-[#081914]/95 via-[#081914]/60 to-[#081914]/25"
+            />
+
+            <div className="relative z-10 p-6 sm:p-8 flex items-center gap-2.5">
+              <span className="w-9 h-9 rounded-[10px] bg-[#63DCAD] text-[#04261D] flex items-center justify-center shrink-0">
+                <Compass className="w-5 h-5" />
+              </span>
+              <span className="font-display text-lg font-bold text-[#F6F3EB] tracking-tight">
+                CrestPath
+              </span>
+            </div>
+
+            <div className="relative z-10 p-6 sm:p-8 space-y-4">
+              <h2 className="font-display text-2xl font-bold text-[#F6F3EB] leading-snug [text-wrap:balance]">
+                Organize every internship and scholarship you discover across
+                Uganda.
+              </h2>
+
+              <ul className="space-y-2.5 text-xs sm:text-sm text-[#D8E2DD]">
+                <li className="flex items-start gap-2.5">
+                  <FileText className="w-4 h-4 text-[#63DCAD] shrink-0 mt-0.5" />
+                  <span>
+                    Turn pasted WhatsApp forwards &amp; LinkedIn posts into
+                    structured cards.
                   </span>
-                </div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Login</h1>
-                <p className="text-xs text-gray-400 mt-1">
-                  Enter your student credentials to continue
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <MapPin className="w-4 h-4 text-[#63DCAD] shrink-0 mt-0.5" />
+                  <span>
+                    Filter opportunities across Uganda regions &amp; measure
+                    skill alignment.
+                  </span>
+                </li>
+                <li className="flex items-start gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-[#63DCAD] shrink-0 mt-0.5" />
+                  <span>
+                    Grounded career advisor that strictly uses your saved
+                    workspace entries.
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Right Column: Sign In / Create Account Form */}
+          <div className="lg:col-span-6 p-6 sm:p-10 flex flex-col justify-center">
+            <div className="max-w-sm w-full mx-auto space-y-6">
+              <div>
+                <h1 className="font-display text-2xl font-bold text-ink tracking-tight">
+                  {isSignUp ? "Create your student account" : "Sign in to CrestPath"}
+                </h1>
+                <p className="text-sm text-ink-secondary mt-1">
+                  {isSignUp
+                    ? "Start a clean, private workspace for your own opportunities."
+                    : "Enter your student email to continue."}
                 </p>
               </div>
 
               {errorMsg && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-xs flex items-center gap-2">
+                <div
+                  role="alert"
+                  className="p-3 rounded-xl bg-tertiary-container/60 border border-tertiary/35 text-on-tertiary-container text-xs flex items-center gap-2"
+                >
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   <span>{errorMsg}</span>
                 </div>
               )}
 
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                {/* Honeypot field for bot spam deterrence */}
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <input
                   type="text"
                   name="_hp_verify"
@@ -144,211 +197,118 @@ function LoginForm() {
                   value={honeypot}
                   onChange={(e) => setHoneypot(e.target.value)}
                 />
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Student Email (e.g. student@university.ac.ug)"
-                    className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
-                  />
-                </div>
 
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Password"
-                    className="w-full pl-10 pr-10 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    "Login"
-                  )}
-                </button>
-
-                {/* 1-Click Demo button removed */}
-              </form>
-
-              {/* Mobile Toggle */}
-              <div className="text-center pt-2 md:hidden">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setErrorMsg("");
-                    setIsSignUp(true);
-                  }}
-                  className="text-xs text-gray-400 hover:text-emerald-300 transition-colors"
-                >
-                  Don&apos;t have an account? <span className="text-emerald-400 font-semibold">Sign Up</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* RIGHT PANEL */}
-        <div
-          className={`flex-1 p-8 sm:p-12 flex flex-col justify-center transition-all duration-500 ease-in-out ${
-            isSignUp
-              ? "order-1 md:order-2 bg-transparent"
-              : "order-2 md:order-2 bg-gradient-to-br from-emerald-950/60 to-surface/90 border-l border-white/5 text-center items-center"
-          }`}
-        >
-          {isSignUp ? (
-            /* Right Form State when Create Account is Active */
-            <div className="w-full max-w-sm mx-auto space-y-5">
-              <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <Compass className="w-3.5 h-3.5 stroke-[2.5]" />
+                {isSignUp && (
+                  <div className="space-y-1.5">
+                    <label
+                      htmlFor="auth-name"
+                      className="block text-xs font-semibold text-ink-secondary"
+                    >
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 text-ink-secondary absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <input
+                        id="auth-name"
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your full name"
+                        className="w-full min-h-[46px] pl-10 pr-4 rounded-xl border border-outline bg-surface-low text-sm text-ink placeholder:text-ink-secondary/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                      />
+                    </div>
                   </div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
-                    InternPilot
-                  </span>
-                </div>
-                <h1 className="text-2xl font-bold text-white tracking-tight">Create Account</h1>
-                <p className="text-xs text-gray-400 mt-1">
-                  Join verified Ugandan tech opportunities today
-                </p>
-              </div>
+                )}
 
-              {errorMsg && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-200 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
-                  <span>{errorMsg}</span>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-3.5">
-                {/* Honeypot field for bot spam deterrence */}
-                <input
-                  type="text"
-                  name="_hp_verify"
-                  tabIndex={-1}
-                  autoComplete="off"
-                  className="hidden pointer-events-none"
-                  aria-hidden="true"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                />
-                <div className="relative">
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Full Name (e.g. Amina Namukasa)"
-                    className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
-                  />
-                </div>
-
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="University / Student Email"
-                    className="w-full pl-10 pr-4 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
-                  />
-                </div>
-
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create Password (min 6 chars)"
-                    className="w-full pl-10 pr-10 py-3 text-xs sm:text-sm rounded-xl bg-white/[0.06] border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/60 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="auth-email"
+                    className="block text-xs font-semibold text-ink-secondary"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                    Student Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="w-4 h-4 text-ink-secondary absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      id="auth-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@university.ac.ug"
+                      className="w-full min-h-[46px] pl-10 pr-4 rounded-xl border border-outline bg-surface-low text-sm text-ink placeholder:text-ink-secondary/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="auth-password"
+                    className="block text-xs font-semibold text-ink-secondary"
+                  >
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-ink-secondary absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      id="auth-password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      minLength={6}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full min-h-[46px] pl-10 pr-11 rounded-xl border border-outline bg-surface-low text-sm text-ink placeholder:text-ink-secondary/60 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={
+                        showPassword ? "Hide password" : "Show password"
+                      }
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-lg flex items-center justify-center text-ink-secondary hover:text-ink"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-bold transition-all shadow-lg shadow-emerald-950/50 flex items-center justify-center gap-2"
+                  className="w-full min-h-[48px] rounded-[12px] bg-primary hover:opacity-90 disabled:opacity-60 text-white dark:text-[#04261D] text-sm font-semibold transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    "Sign Up"
-                  )}
+                  {isLoading
+                    ? "Please wait..."
+                    : isSignUp
+                    ? "Create Account"
+                    : "Sign In"}
                 </button>
               </form>
 
-              {/* Mobile Toggle */}
-              <div className="text-center pt-2 md:hidden">
+              <div className="pt-3 border-t border-outline text-center">
                 <button
                   type="button"
                   onClick={() => {
                     setErrorMsg("");
-                    setIsSignUp(false);
+                    setIsSignUp(!isSignUp);
                   }}
-                  className="text-xs text-gray-400 hover:text-emerald-300 transition-colors"
+                  className="text-xs sm:text-sm font-medium text-primary hover:underline"
                 >
-                  Already a Member? <span className="text-emerald-400 font-semibold">Login</span>
+                  {isSignUp
+                    ? "Already have an account? Sign in"
+                    : "New to CrestPath? Create an account"}
                 </button>
               </div>
             </div>
-          ) : (
-            /* Right Overlay State when Sign In is Active */
-            <div className="max-w-xs space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center mx-auto text-emerald-300">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
-                HELLO, FRIEND!
-              </h2>
-              <p className="text-xs text-gray-300 leading-relaxed">
-                Enter your personal details and start your career journey with InternPilot.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setErrorMsg("");
-                  setIsSignUp(true);
-                }}
-                className="mt-4 inline-flex items-center gap-1.5 border border-white/25 rounded-full px-7 py-2.5 text-xs font-semibold hover:bg-white/10 transition-all text-white"
-              >
-                <span>Create Account</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
@@ -357,12 +317,12 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-[#080D0B] flex items-center justify-center text-emerald-400 text-xs font-semibold">
-          Loading InternPilot...
+        <div className="min-h-screen bg-canvas flex items-center justify-center text-ink-secondary text-sm">
+          Loading CrestPath...
         </div>
       }
     >
-      <LoginForm />
+      <CrestPathLoginForm />
     </Suspense>
   );
 }

@@ -3,96 +3,105 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B1210;
-  --surface: #111A17;
-  --foreground: #F3F4F6;
-  --emerald-accent: #10B981;
+  /* Light Theme — Kampala Scholar Editorial */
+  --cp-bg: #F6F3EB;
+  --cp-surface: #FFFFFF;
+  --cp-surface-low: #FBF9F3;
+  --cp-ink: #171E1B;
+  --cp-ink-secondary: #47524D;
+  --cp-outline: #E2DDD0;
+
+  --cp-primary: #0D4A3A;
+  --cp-primary-container: #C8EFE0;
+  --cp-on-primary-container: #04261D;
+
+  --cp-secondary: #9A6700;
+  --cp-secondary-container: #FFECC2;
+  --cp-on-secondary-container: #311F00;
+
+  --cp-tertiary: #B5452A;
+  --cp-tertiary-container: #FFDDD4;
+  --cp-on-tertiary-container: #411106;
+
+  --cp-strong: #13805B;
+  --cp-moderate: #C47F00;
+  --cp-urgent: #C43D2B;
 }
 
-/* Light mode overrides */
-html:not(.dark) {
-  --background: #F0FBF6;
-  --surface: #FFFFFF;
-  --foreground: #0F1A16;
-  --emerald-accent: #059669;
+html.dark {
+  /* Dark Theme — Deep Savannah Editorial */
+  --cp-bg: #0D1412;
+  --cp-surface: #131D1A;
+  --cp-surface-low: #141E1B;
+  --cp-ink: #E8EAE6;
+  --cp-ink-secondary: #B7C5BE;
+  --cp-outline: #283732;
+
+  --cp-primary: #63DCAD;
+  --cp-primary-container: #0D523E;
+  --cp-on-primary-container: #D7F8EA;
+
+  --cp-secondary: #F5C156;
+  --cp-secondary-container: #5D3E00;
+  --cp-on-secondary-container: #FFECC2;
+
+  --cp-tertiary: #FFB49F;
+  --cp-tertiary-container: #5C1F12;
+  --cp-on-tertiary-container: #FFDDD4;
+
+  --cp-strong: #5CE0B1;
+  --cp-moderate: #F5C156;
+  --cp-urgent: #FF8F7C;
 }
 
-html:not(.dark) body {
-  background: #F0FBF6;
-  color: #0F1A16;
+@layer base {
+  html {
+    background-color: var(--cp-bg);
+    color: var(--cp-ink);
+  }
+
+  body {
+    background-color: var(--cp-bg);
+    color: var(--cp-ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-jakarta), system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
 }
 
-html:not(.dark) .glass-panel {
-  background: rgba(255, 255, 255, 0.85);
-  border-color: rgba(16, 185, 129, 0.15);
+/* Dark mode subtle optical compensation */
+html.dark body {
+  letter-spacing: 0.005em;
 }
 
-html:not(.dark) .glass-card {
-  background: rgba(255, 255, 255, 0.80);
-  border-color: rgba(16, 185, 129, 0.15);
-  color: #0F1A16;
-}
-
-html:not(.dark) .glass-card:hover {
-  background: rgba(255, 255, 255, 0.95);
-  border-color: rgba(16, 185, 129, 0.40);
-}
-
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Glassmorphism utility classes */
-.glass-panel {
-  background: rgba(17, 26, 23, 0.75);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.glass-card {
-  background: rgba(17, 26, 23, 0.65);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.glass-card:hover {
-  border-color: rgba(16, 185, 129, 0.3);
-  background: rgba(17, 26, 23, 0.85);
-  transform: translateY(-2px);
-}
-
-.glass-button {
-  background: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  color: #34D399;
-  transition: all 0.15s ease-in-out;
-}
-
-.glass-button:hover {
-  background: rgba(16, 185, 129, 0.22);
-  border-color: rgba(16, 185, 129, 0.5);
-}
-
-/* Subtle scrollbars for sleek mobile and desktop UX */
+/* Crisp custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #0B1210;
-}
-::-webkit-scrollbar-thumb {
-  background: #1A2723;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #10B981;
+  background: transparent;
 }
 
+::-webkit-scrollbar-thumb {
+  background: var(--cp-outline);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cp-ink-secondary);
+}
+
+/* Hide scrollbars cleanly for horizontal filter rails */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

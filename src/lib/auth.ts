@@ -61,13 +61,15 @@ export async function autoProvisionStudentProfile(
 
   const newProfile: StudentProfile = {
     id: `student-${email}`,
-    name: name || "Makerere Student",
-    university: "Makerere University",
-    course: "BSc. Software Engineering",
-    year_of_study: 3,
-    skills: ["React", "TypeScript", "Python", "SQL", "Git"],
-    interests: ["Full-Stack Web", "Fintech", "AI"],
-    experience_summary: "Student builder focused on software engineering opportunities in Uganda.",
+    name: name || "",
+    email,
+    university: "",
+    course: "",
+    year_of_study: null,
+    cgpa: "",
+    skills: [],
+    interests: [],
+    experience_summary: "",
   };
 
   await saveProfile(newProfile);

@@ -80,12 +80,17 @@ export async function POST(req: Request) {
       user: userSession,
     });
 
+    const isHttps =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.url.startsWith("https://") ||
+      process.env.NODE_ENV === "production";
+
     response.cookies.set({
       name: AUTH_COOKIE_NAME,
       value: encoded,
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: isHttps,
+      sameSite: isHttps ? "none" : "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
     });

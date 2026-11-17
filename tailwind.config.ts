@@ -9,20 +9,33 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["var(--font-jakarta)", "system-ui", "sans-serif"],
+        sans: ["var(--font-dm-sans)", "system-ui", "sans-serif"],
+        mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
+      },
       colors: {
-        background: "var(--background)",
-        surface: "var(--surface)",
-        "surface-card": "rgba(17, 26, 23, 0.75)",
-        "surface-border": "rgba(255, 255, 255, 0.08)",
-        emerald: {
-          400: "#34D399",
-          500: "#10B981",
-          600: "#059669",
-        },
+        canvas: "var(--cp-bg)",
+        surface: "var(--cp-surface)",
+        "surface-low": "var(--cp-surface-low)",
+        ink: "var(--cp-ink)",
+        "ink-secondary": "var(--cp-ink-secondary)",
+        outline: "var(--cp-outline)",
+        primary: "var(--cp-primary)",
+        "primary-container": "var(--cp-primary-container)",
+        "on-primary-container": "var(--cp-on-primary-container)",
+        secondary: "var(--cp-secondary)",
+        "secondary-container": "var(--cp-secondary-container)",
+        "on-secondary-container": "var(--cp-on-secondary-container)",
+        tertiary: "var(--cp-tertiary)",
+        "tertiary-container": "var(--cp-tertiary-container)",
+        "on-tertiary-container": "var(--cp-on-tertiary-container)",
+        strong: "var(--cp-strong)",
+        moderate: "var(--cp-moderate)",
+        urgent: "var(--cp-urgent)",
       },
     },
   },
   plugins: [],
 };
 export default config;
-
