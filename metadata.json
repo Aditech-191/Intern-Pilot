@@ -1,0 +1,8 @@
+{
+  "name": "Intern Pilot",
+  "description": "AI-guided career hub empowering Ugandan university students to discover, track, and apply for verified internships, scholarships, and fellowships on time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

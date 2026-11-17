@@ -1,4 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, ThinkingLevel, Type } from "@google/genai";
 import {
   StudentProfile,
   Opportunity,
@@ -8,15 +8,19 @@ import {
 } from "@/types";
 import { inferRegionFromLocation } from "./opportunity-utils";
 
-const TIMEOUT_MS = 18000;
+const TIMEOUT_MS = 45000;
 const MODEL_NAME = "gemini-4-hydrogen";
 
-function getGeminiClient(): GoogleGenAI {
+type GeminiContext = "advisor" | "extractor";
+
+function getGeminiClient(context: GeminiContext): GoogleGenAI {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   if (!apiKey) {
-    throw new Error(
-      "GEMINI_API_KEY is not configured. Configure it in Settings > Secrets, or use Manual Entry to add this opportunity directly."
-    );
+    const hint =
+      context === "extractor"
+        ? "Please attach a Gemini API key in Settings > Secrets, or switch to Manual Entry."
+        : "Please attach a Gemini API key in Settings > Secrets and try again.";
+    throw new Error(`GEMINI_API_KEY is not configured on the server. ${hint}`);
   }
   return new GoogleGenAI({
     apiKey,
@@ -26,6 +30,40 @@ function getGeminiClient(): GoogleGenAI {
       },
     },
   });
+}
+
+function formatGeminiError(error: unknown, context: GeminiContext): Error {
+  const raw = error instanceof Error ? error.message : String(error ?? "");
+  const upper = raw.toUpperCase();
+
+  if (upper.includes("GEMINI_API_KEY IS NOT CONFIGURED")) {
+    return error instanceof Error ? error : new Error(raw);
+  }
+  if (
+    upper.includes("API_KEY_INVALID") ||
+    upper.includes("PERMISSION_DENIED") ||
+    upper.includes("403") ||
+    upper.includes("INVALID API KEY")
+  ) {
+    return new Error(
+      "Your Gemini API key was rejected (invalid or missing permissions). Please check or select a valid key in Settings > Secrets."
+    );
+  }
+  if (upper.includes("RESOURCE_EXHAUSTED") || upper.includes("429")) {
+    return new Error(
+      "Gemini API rate limit or quota was reached. Please wait a moment or switch to a billing-enabled API key in Settings > Secrets."
+    );
+  }
+  if (upper.includes("TIMED OUT")) {
+    return new Error("The AI request timed out. Please try again.");
+  }
+
+  return new Error(
+    raw ||
+      (context === "extractor"
+        ? "Unable to extract opportunity details right now. Please try again."
+        : "Career Advisor encountered an error. Please try again.")
+  );
 }
 
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -39,6 +77,22 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
   return Promise.race([promise, timeoutPromise]).finally(() => {
     if (timer) clearTimeout(timer);
   });
+}
+
+async function withTransientRetry<T>(fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message.toUpperCase() : "";
+    const isTransient =
+      msg.includes("503") ||
+      msg.includes("500") ||
+      msg.includes("UNAVAILABLE") ||
+      msg.includes("DEADLINE_EXCEEDED");
+    if (!isTransient) throw err;
+    await new Promise((r) => setTimeout(r, 800));
+    return await fn();
+  }
 }
 
 const VALID_CATEGORIES: OpportunityCategory[] = [
@@ -62,7 +116,7 @@ const VALID_REGIONS: OpportunityRegion[] = [
 export async function extractOpportunityFromText(
   rawText: string
 ): Promise<ExtractedOpportunityData> {
-  const ai = getGeminiClient();
+  const ai = getGeminiClient("extractor");
   const today = new Date().toISOString().split("T")[0];
 
   const systemInstruction = `You are a structured data extraction engine for Intern Pilot, a Ugandan university career hub.
@@ -73,14 +127,18 @@ If a field is missing from the pasted text, return an empty string or null (for 
 Map Ugandan locations into one of these regions: Central, Western, Eastern, Northern, or Nationwide (for remote/countrywide/unspecified).
 In "warnings", flag any potential red flags or missing critical details (e.g., "Application fee requested — verify legitimacy", "Deadline not stated in post", "No official application URL provided", "Personal phone/WhatsApp contact only").`;
 
-  const response = await withTimeout(
-    ai.models.generateContent({
-      model: MODEL_NAME,
-      contents: `Extract structured opportunity details from the following pasted post:\n\n"""\n${rawText}\n"""`,
-      config: {
-        systemInstruction,
-        responseMimeType: "application/json",
-        responseSchema: {
+  let response;
+  try {
+    response = await withTransientRetry(() =>
+      withTimeout(
+        ai.models.generateContent({
+          model: MODEL_NAME,
+          contents: `Extract structured opportunity details from the following pasted post:\n\n"""\n${rawText}\n"""`,
+          config: {
+            systemInstruction,
+            thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+            responseMimeType: "application/json",
+            responseSchema: {
           type: Type.OBJECT,
           properties: {
             title: { type: Type.STRING, description: "Role or scholarship title" },
@@ -141,11 +199,15 @@ In "warnings", flag any potential red flags or missing critical details (e.g., "
             "summary",
             "warnings",
           ],
-        },
-      },
-    }),
-    TIMEOUT_MS
-  );
+            },
+          },
+        }),
+        TIMEOUT_MS
+      )
+    );
+  } catch (err) {
+    throw formatGeminiError(err, "extractor");
+  }
 
   const rawJson = (response.text ?? "{}").trim();
   const parsed = JSON.parse(rawJson);
@@ -229,7 +291,7 @@ export async function adviseCareer(
     return "You have not added any opportunities to your Intern Pilot workspace yet. Go to **Parse Post** to paste a WhatsApp forward, LinkedIn post, or enter an opportunity manually—then I can give you grounded match feedback strictly from your list without inventing listings or deadlines.";
   }
 
-  const ai = getGeminiClient();
+  const ai = getGeminiClient("advisor");
   const today = new Date().toISOString().split("T")[0];
 
   const systemInstruction = `You are the Intern Pilot Career Advisor for Ugandan university students.
@@ -259,16 +321,24 @@ ${JSON.stringify(listings, null, 2)}`;
     parts: [{ text: message }],
   });
 
-  const res = await withTimeout(
-    ai.models.generateContent({
-      model: MODEL_NAME,
-      config: {
-        systemInstruction,
-      },
-      contents: formattedContents,
-    }),
-    TIMEOUT_MS
-  );
+  let res;
+  try {
+    res = await withTransientRetry(() =>
+      withTimeout(
+        ai.models.generateContent({
+          model: MODEL_NAME,
+          config: {
+            systemInstruction,
+            thinkingConfig: { thinkingLevel: ThinkingLevel.LOW },
+          },
+          contents: formattedContents,
+        }),
+        TIMEOUT_MS
+      )
+    );
+  } catch (err) {
+    throw formatGeminiError(err, "advisor");
+  }
 
   const text = res.text?.trim();
   if (!text) {
