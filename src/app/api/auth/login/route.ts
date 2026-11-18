@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
-import { AUTH_COOKIE_NAME, autoProvisionStudentProfile } from "@/lib/auth";
+import {
+  AUTH_COOKIE_NAME,
+  autoProvisionStudentProfile,
+  signSessionToken,
+} from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sanitizeEmail, sanitizeString } from "@/lib/sanitize";
 import { logAuditEvent } from "@/lib/audit";
+import {
+  hasUserCredential,
+  registerUserCredential,
+  verifyUserCredential,
+} from "@/lib/password-security";
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
@@ -24,10 +33,18 @@ export async function POST(req: Request) {
   }
 
   try {
-    const body = await req.json();
-    const { mode, email, password, name, _hp_verify } = body;
+    const contentType = req.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return NextResponse.json(
+        { error: "Unsupported Content-Type. Expected application/json." },
+        { status: 415 }
+      );
+    }
 
-    // 2. Bot / Spam Protection: Honeypot trap field (hidden from real users, populated by dumb bots)
+    const body = await req.json();
+    const { mode = "login", email, password, name, _hp_verify } = body ?? {};
+
+    // 2. Bot / Spam Protection: Honeypot trap field (hidden from real users, populated by bots)
     if (_hp_verify && typeof _hp_verify === "string" && _hp_verify.trim().length > 0) {
       logAuditEvent("BOT_HONEYPOT_TRIGGERED", { ip, details: { mode } });
       return NextResponse.json(
@@ -36,43 +53,104 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. Input Sanitization & Server-Side Validation
+    // 3. Strict Server-Side Form Validation
+    if (mode !== "login" && mode !== "signup") {
+      return NextResponse.json(
+        { error: "Invalid authentication mode." },
+        { status: 400 }
+      );
+    }
+
     const sanitizedEmail = sanitizeEmail(email);
     if (!sanitizedEmail) {
-      logAuditEvent("AUTH_LOGIN_FAILURE", { ip, details: { reason: "invalid_email_format" } });
+      logAuditEvent("AUTH_LOGIN_FAILURE", {
+        ip,
+        details: { reason: "invalid_email_format" },
+      });
       return NextResponse.json(
         { error: "Please provide a valid student or university email address." },
         { status: 400 }
       );
     }
 
-    if (!password || typeof password !== "string" || password.length < 6) {
-      logAuditEvent("AUTH_LOGIN_FAILURE", { ip, details: { reason: "short_password" } });
+    if (
+      !password ||
+      typeof password !== "string" ||
+      password.length < 6 ||
+      password.length > 128
+    ) {
+      logAuditEvent("AUTH_LOGIN_FAILURE", {
+        ip,
+        details: { reason: "invalid_password_length" },
+      });
       return NextResponse.json(
-        { error: "Password must be at least 6 characters." },
+        { error: "Password must be between 6 and 128 characters." },
         { status: 400 }
       );
     }
 
     const cleanName = sanitizeString(name, 100);
 
+    // 4. Salted scrypt Password Hashing & Constant-Time Credential Verification
+    let accountName = cleanName || sanitizedEmail.split("@")[0];
+    let accountRole: "student" | "admin" = "student";
+
     if (mode === "signup") {
-      await autoProvisionStudentProfile(cleanName || sanitizedEmail.split("@")[0], sanitizedEmail);
+      if (!cleanName || cleanName.length < 2) {
+        return NextResponse.json(
+          { error: "Please provide your full name (at least 2 characters)." },
+          { status: 400 }
+        );
+      }
+
+      if (hasUserCredential(sanitizedEmail)) {
+        logAuditEvent("AUTH_LOGIN_FAILURE", {
+          ip,
+          details: { reason: "duplicate_signup", email: sanitizedEmail },
+        });
+        return NextResponse.json(
+          { error: "An account with this email already exists. Please sign in instead." },
+          { status: 409 }
+        );
+      }
+
+      const created = registerUserCredential(sanitizedEmail, cleanName, password);
+      accountName = created.name;
+      accountRole = created.role;
+      await autoProvisionStudentProfile(accountName, sanitizedEmail);
+    } else {
+      const verified = verifyUserCredential(sanitizedEmail, password);
+      if (!verified) {
+        logAuditEvent("AUTH_LOGIN_FAILURE", {
+          ip,
+          details: { reason: "invalid_credentials" },
+        });
+        return NextResponse.json(
+          {
+            error:
+              "Invalid email or password. If you are new to Intern Pilot, switch to Create Account.",
+          },
+          { status: 401 }
+        );
+      }
+      accountName = verified.name;
+      accountRole = verified.role;
     }
 
     const userSession = {
       userId: `student-${sanitizedEmail}`,
       email: sanitizedEmail,
-      name: cleanName || sanitizedEmail.split("@")[0],
-      role: "student" as const,
+      name: accountName,
+      role: accountRole,
     };
 
-    const encoded = Buffer.from(JSON.stringify(userSession)).toString("base64");
+    // 5. Cryptographically Sign Session Cookie (HMAC-SHA256 with expiration)
+    const signedToken = await signSessionToken(userSession, 60 * 60 * 24 * 7);
 
     logAuditEvent("AUTH_LOGIN_SUCCESS", {
       actorId: userSession.userId,
       ip,
-      details: { mode: mode || "login" },
+      details: { mode },
     });
 
     const response = NextResponse.json({
@@ -87,7 +165,7 @@ export async function POST(req: Request) {
 
     response.cookies.set({
       name: AUTH_COOKIE_NAME,
-      value: encoded,
+      value: signedToken,
       httpOnly: true,
       secure: isHttps,
       sameSite: isHttps ? "none" : "lax",
@@ -104,5 +182,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-

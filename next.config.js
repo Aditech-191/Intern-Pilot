@@ -3,6 +3,7 @@ const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
   poweredByHeader: false, // Turn off X-Powered-By to prevent framework fingerprinting
+  productionBrowserSourceMaps: false, // Never expose source maps / debug artifacts in production
 
   async headers() {
     return [
@@ -31,8 +32,9 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // required for Next.js hydration in client components
               "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
+              "img-src 'self' data: blob: https:",
               "font-src 'self' data:",
+              "object-src 'none'",
               "connect-src 'self' https://generativelanguage.googleapis.com https://*.supabase.co",
               "base-uri 'self'",
               "form-action 'self'",

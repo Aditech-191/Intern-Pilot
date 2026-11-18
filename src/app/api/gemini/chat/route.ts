@@ -54,6 +54,14 @@ export async function POST(req: Request) {
   }
 
   try {
+    const contentLength = Number(req.headers.get("content-length") || "0");
+    if (contentLength > 64 * 1024) {
+      return NextResponse.json(
+        { error: "Request payload exceeds the 64KB limit." },
+        { status: 413 }
+      );
+    }
+
     const body = await req.json();
     const { profile, message, history = [], opportunities = [] } = body;
 

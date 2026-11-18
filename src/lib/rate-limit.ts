@@ -9,11 +9,12 @@ interface RateLimitRecord {
   resetAt: number;
 }
 
+const MAX_STORE_ENTRIES = 10000;
 const rateLimitStore = new Map<string, RateLimitRecord>();
 
 // Cleanup stale keys periodically every 5 minutes to prevent memory leaks
 if (typeof setInterval !== "undefined") {
-  setInterval(() => {
+  const timer = setInterval(() => {
     const now = Date.now();
     rateLimitStore.forEach((record, key) => {
       if (record.resetAt <= now) {
@@ -21,6 +22,9 @@ if (typeof setInterval !== "undefined") {
       }
     });
   }, 5 * 60 * 1000);
+  if (typeof timer === "object" && "unref" in timer && typeof timer.unref === "function") {
+    timer.unref();
+  }
 }
 
 export interface RateLimitResult {
@@ -46,6 +50,12 @@ export function checkRateLimit(
   const existing = rateLimitStore.get(key);
 
   if (!existing || existing.resetAt <= now) {
+    // Cap memory usage against distributed random-IP flood attacks
+    if (rateLimitStore.size >= MAX_STORE_ENTRIES) {
+      const oldestKey = rateLimitStore.keys().next().value;
+      if (oldestKey) rateLimitStore.delete(oldestKey);
+    }
+
     // New or expired window
     rateLimitStore.set(key, {
       count: 1,

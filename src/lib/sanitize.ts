@@ -4,20 +4,38 @@
  */
 
 /**
- * Escapes potentially dangerous HTML and script tags from text inputs.
+ * Escapes/strips potentially dangerous HTML, script tags, SVG/object payloads, and URI schemes.
+ * Runs iteratively so nested bypasses like <scr<script>ipt> cannot reconstruct dangerous tags.
  */
 export function sanitizeString(input: unknown, maxLength = 1000): string {
   if (typeof input !== "string") return "";
 
-  // Truncate to maximum permissible length to prevent memory starvation
-  const trimmed = input.trim().slice(0, maxLength);
+  // Strip null bytes & control chars (except newlines/tabs) and truncate to prevent memory starvation
+  let cleaned = input
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, maxLength);
 
-  // Strip or neutralize dangerous script tags, event handlers, and iframe injection
-  return trimmed
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, "")
-    .replace(/javascript:/gi, "")
-    .replace(/on\w+\s*=/gi, "");
+  let previous = "";
+  let iterations = 0;
+  while (cleaned !== previous && iterations < 5) {
+    previous = cleaned;
+    iterations += 1;
+    cleaned = cleaned
+      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
+      .replace(/<iframe\b[^>]*>[\s\S]*?<\/iframe>/gi, "")
+      .replace(/<object\b[^>]*>[\s\S]*?<\/object>/gi, "")
+      .replace(/<embed\b[^>]*>/gi, "")
+      .replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, "")
+      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
+      .replace(/<\/?(script|iframe|object|embed|svg|style)\b[^>]*>/gi, "")
+      .replace(/javascript\s*:/gi, "")
+      .replace(/vbscript\s*:/gi, "")
+      .replace(/data\s*:\s*text\/html/gi, "")
+      .replace(/\bon[a-z]+\s*=/gi, "");
+  }
+
+  return cleaned.trim();
 }
 
 /**
@@ -26,10 +44,11 @@ export function sanitizeString(input: unknown, maxLength = 1000): string {
 export function sanitizeEmail(email: unknown): string | null {
   if (typeof email !== "string") return null;
   const clean = email.trim().toLowerCase();
-  
-  // RFC 5322 standard email validation regex
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-  if (!emailRegex.test(clean) || clean.length > 254) {
+
+  // Require valid local part and domain with at least one dot + TLD
+  const emailRegex =
+    /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$/;
+  if (!emailRegex.test(clean) || clean.length > 254 || clean.includes("..")) {
     return null;
   }
   return clean;

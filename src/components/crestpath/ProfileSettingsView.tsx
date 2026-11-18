@@ -39,6 +39,7 @@ import {
   parseWorkspaceImportJson,
   serializeWorkspaceBackup,
 } from "@/lib/profile-portability";
+import { validateImageUpload, validateJsonUpload } from "@/lib/file-security";
 
 interface ProfileSettingsViewProps {
   profiles: StudentProfile[];
@@ -163,12 +164,10 @@ export function ProfileSettingsView({
     setPhotoError("");
     setPhotoStatus("");
 
-    if (!file.type.startsWith("image/") && !/\.(png|jpe?g|webp|gif|bmp|avif|svg|ico|tiff?|heic)$/i.test(file.name)) {
-      setPhotoError("Please select a valid picture file.");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setPhotoError("Image must be smaller than 10 MB.");
+    const validation = await validateImageUpload(file);
+    if (!validation.valid) {
+      setPhotoError(validation.error || "Please select a valid picture file.");
+      if (photoInputRef.current) photoInputRef.current.value = "";
       return;
     }
 
@@ -248,6 +247,13 @@ export function ProfileSettingsView({
     if (!file) return;
     setPortabilityError("");
     setPortabilityStatus("");
+
+    const jsonCheck = validateJsonUpload(file);
+    if (!jsonCheck.valid) {
+      setPortabilityError(jsonCheck.error || "Invalid JSON backup file.");
+      if (jsonInputRef.current) jsonInputRef.current.value = "";
+      return;
+    }
 
     try {
       const text = await file.text();

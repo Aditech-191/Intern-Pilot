@@ -16,10 +16,16 @@
 # Misc
 .DS_Store
 *.pem
+*.key
+*.bak
+*.backup
+*.sql.gz
+.playwright-cli/
 
-# Local env files
-.env*.local
+# Local env files (keep .env.example tracked)
 .env
+.env.*
+!.env.example
 
 # Vercel
 .vercel

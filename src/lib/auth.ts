@@ -1,33 +1,33 @@
 import { cookies } from "next/headers";
 import { StudentProfile } from "@/types";
-import { SEED_PROFILES } from "./seed-data";
 import { saveProfile, getProfiles } from "./db";
+import {
+  signSessionToken,
+  verifySessionToken,
+  SessionPayload,
+} from "./session-crypto";
 
 export const AUTH_COOKIE_NAME = "internpilot_session";
 
-export interface UserSession {
-  userId: string;
-  email: string;
-  name: string;
-  role: "student" | "admin";
-}
+export type UserSession = SessionPayload;
 
 export { sanitizeRedirect } from "./auth-client";
+export { signSessionToken, verifySessionToken };
 
 export async function getCurrentSession(): Promise<UserSession | null> {
   const cookieStore = cookies();
   const sessionCookie = cookieStore.get(AUTH_COOKIE_NAME)?.value;
   if (!sessionCookie) return null;
 
-  try {
-    const parsed = JSON.parse(Buffer.from(sessionCookie, "base64").toString("utf8"));
-    if (!parsed?.userId || !parsed?.email) {
-      return null;
-    }
-    return parsed as UserSession;
-  } catch {
-    return null;
-  }
+  const verified = await verifySessionToken(sessionCookie);
+  if (!verified) return null;
+
+  return {
+    userId: verified.userId,
+    email: verified.email,
+    name: verified.name,
+    role: verified.role,
+  };
 }
 
 /**
