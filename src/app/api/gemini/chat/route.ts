@@ -4,7 +4,35 @@ import { getCurrentSession, assertResourceOwnership } from "@/lib/auth";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { sanitizeChatMessage, sanitizeString } from "@/lib/sanitize";
 import { logAuditEvent } from "@/lib/audit";
-import { Opportunity, StudentProfile } from "@/types";
+import { Opportunity, ProfessionalProfileSummary, StudentProfile } from "@/types";
+
+function sanitizeInsightsPayload(input: unknown): ProfessionalProfileSummary | null {
+  if (!input || typeof input !== "object") return null;
+  const p = input as Record<string, unknown>;
+  const confidence =
+    p.confidence === "verified_web" ||
+    p.confidence === "partial" ||
+    p.confidence === "not_found"
+      ? p.confidence
+      : "partial";
+  return {
+    headline: sanitizeString(p.headline, 160),
+    summary: sanitizeString(p.summary, 900),
+    extractedSkills: Array.isArray(p.extractedSkills)
+      ? p.extractedSkills.slice(0, 20).map((s) => sanitizeString(s, 60)).filter(Boolean)
+      : [],
+    experienceHighlights: Array.isArray(p.experienceHighlights)
+      ? p.experienceHighlights.slice(0, 6).map((s) => sanitizeString(s, 180)).filter(Boolean)
+      : [],
+    educationHighlights: Array.isArray(p.educationHighlights)
+      ? p.educationHighlights.slice(0, 4).map((s) => sanitizeString(s, 180)).filter(Boolean)
+      : [],
+    alignmentNotes: sanitizeString(p.alignmentNotes, 500),
+    sources: [],
+    fetchedAt: sanitizeString(p.fetchedAt, 40),
+    confidence,
+  };
+}
 
 function sanitizeOpportunitiesPayload(input: unknown): Opportunity[] {
   if (!Array.isArray(input)) return [];
@@ -63,7 +91,13 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json();
-    const { profile, message, history = [], opportunities = [] } = body;
+    const {
+      profile,
+      message,
+      history = [],
+      opportunities = [],
+      professionalInsights = null,
+    } = body;
 
     const cleanMessage = sanitizeChatMessage(message);
     if (!cleanMessage) {
@@ -100,6 +134,9 @@ export async function POST(req: Request) {
 
     // Strictly use ONLY the user-inputted opportunities in the workspace
     const userOpportunities = sanitizeOpportunitiesPayload(opportunities);
+    const cleanInsights = sanitizeInsightsPayload(
+      professionalInsights ?? profile.professionalInsights
+    );
     const cleanHistory = Array.isArray(history)
       ? history
           .slice(-10)
@@ -121,7 +158,8 @@ export async function POST(req: Request) {
       profile as StudentProfile,
       userOpportunities,
       cleanHistory,
-      cleanMessage
+      cleanMessage,
+      cleanInsights
     );
 
     return NextResponse.json({

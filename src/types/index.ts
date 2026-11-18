@@ -26,6 +26,25 @@ export type SortMode = "best_match" | "earliest_deadline" | "region";
 
 export type TrackerFilter = "all" | "saved" | "applied" | "imported";
 
+export interface ProfessionalProfileSource {
+  title: string;
+  uri: string;
+}
+
+export interface ProfessionalProfileSummary {
+  headline: string;
+  summary: string;
+  extractedSkills: string[];
+  experienceHighlights: string[];
+  educationHighlights: string[];
+  alignmentNotes: string;
+  sources: ProfessionalProfileSource[];
+  queriedLinkedinUrl?: string | null;
+  queriedName?: string | null;
+  fetchedAt: string;
+  confidence: "verified_web" | "partial" | "not_found";
+}
+
 export interface StudentProfile {
   id: string;
   name: string;
@@ -40,6 +59,7 @@ export interface StudentProfile {
   skills: string[];
   interests: string[];
   experience_summary: string;
+  professionalInsights?: ProfessionalProfileSummary | null;
 }
 
 export interface Opportunity {

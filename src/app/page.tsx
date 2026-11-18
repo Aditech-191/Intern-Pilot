@@ -749,6 +749,7 @@ export default function CrestPathWorkspacePage() {
           opportunities={opportunities}
           onInspectOpportunity={handleInspectFromAdvisor}
           onOpenParse={() => setActiveTab("parse")}
+          onSaveProfile={handleSaveProfile}
         />
       )}
 

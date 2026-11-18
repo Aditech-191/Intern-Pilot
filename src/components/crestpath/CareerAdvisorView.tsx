@@ -16,12 +16,14 @@ import {
   extractCitedOpportunityIds,
   getDeadlineInfo,
 } from "@/lib/opportunity-utils";
+import { ProfessionalInsightsPanel } from "./ProfessionalInsightsPanel";
 
 interface CareerAdvisorViewProps {
   profile: StudentProfile;
   opportunities: Opportunity[];
   onInspectOpportunity: (opportunity: Opportunity) => void;
   onOpenParse: () => void;
+  onSaveProfile: (updated: StudentProfile) => void;
 }
 
 const STARTER_PROMPTS = [
@@ -35,6 +37,7 @@ export function CareerAdvisorView({
   opportunities,
   onInspectOpportunity,
   onOpenParse,
+  onSaveProfile,
 }: CareerAdvisorViewProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -71,6 +74,7 @@ export function CareerAdvisorView({
         body: JSON.stringify({
           profile,
           opportunities,
+          professionalInsights: profile.professionalInsights ?? null,
           message: query,
           history: messages.map((m) => ({
             role: m.role,
@@ -164,6 +168,12 @@ export function CareerAdvisorView({
           invents external listings, application links, or deadlines.
         </p>
       </div>
+
+      {/* Real-Time Google & LinkedIn Professional Profile Insights */}
+      <ProfessionalInsightsPanel
+        profile={profile}
+        onSaveProfile={onSaveProfile}
+      />
 
       {/* Chat Viewport */}
       <section
