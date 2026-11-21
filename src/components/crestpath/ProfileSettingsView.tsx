@@ -40,16 +40,23 @@ import {
   serializeWorkspaceBackup,
 } from "@/lib/profile-portability";
 import { validateImageUpload, validateJsonUpload } from "@/lib/file-security";
+import {
+  hasBuiltInCampusPhoto,
+  readAndOptimizeCampusPhotoFile,
+} from "@/lib/university-campus-media";
 
 interface ProfileSettingsViewProps {
   profiles: StudentProfile[];
   activeProfile: StudentProfile;
   opportunities: Opportunity[];
   trackingMap: Record<string, OpportunityTracking>;
+  customUniversityPhotos: Record<string, string>;
   sessionEmail?: string | null;
   onSaveProfile: (profile: StudentProfile) => void;
   onSwitchProfile: (profileId: string) => void;
   onCreateProfile: () => void;
+  onUploadUniversityPhoto: (university: string, dataUrl: string) => void;
+  onRemoveUniversityPhoto: (university: string) => void;
   onImportWorkspace: (
     payload: WorkspaceBackupPayload,
     mode: "replace" | "merge"
@@ -107,10 +114,13 @@ export function ProfileSettingsView({
   activeProfile,
   opportunities,
   trackingMap,
+  customUniversityPhotos,
   sessionEmail,
   onSaveProfile,
   onSwitchProfile,
   onCreateProfile,
+  onUploadUniversityPhoto,
+  onRemoveUniversityPhoto,
   onImportWorkspace,
   onResetWorkspace,
 }: ProfileSettingsViewProps) {
@@ -118,6 +128,7 @@ export function ProfileSettingsView({
   const { mode, setMode } = useTheme();
 
   const photoInputRef = useRef<HTMLInputElement>(null);
+  const campusPhotoInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<StudentProfile>(activeProfile);
@@ -126,6 +137,8 @@ export function ProfileSettingsView({
   const [interestInput, setInterestInput] = useState("");
   const [savedNotice, setSavedNotice] = useState(false);
   const [socialError, setSocialError] = useState("");
+  const [campusPhotoStatus, setCampusPhotoStatus] = useState("");
+  const [campusPhotoError, setCampusPhotoError] = useState("");
   const [confirmReset, setConfirmReset] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
@@ -217,6 +230,41 @@ export function ProfileSettingsView({
       setPhotoError(
         err instanceof Error ? err.message : "Could not export profile photo."
       );
+    }
+  };
+
+  const handleCampusPhotoUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCampusPhotoError("");
+    setCampusPhotoStatus("");
+
+    const uniName = form.university.trim();
+    if (!uniName) {
+      setCampusPhotoError("Select or type your university name first.");
+      if (campusPhotoInputRef.current) campusPhotoInputRef.current.value = "";
+      return;
+    }
+
+    const validation = await validateImageUpload(file);
+    if (!validation.valid) {
+      setCampusPhotoError(validation.error || "Please select a valid picture.");
+      if (campusPhotoInputRef.current) campusPhotoInputRef.current.value = "";
+      return;
+    }
+
+    try {
+      const optimized = await readAndOptimizeCampusPhotoFile(file);
+      onUploadUniversityPhoto(uniName, optimized);
+      setCampusPhotoStatus(
+        `Saved campus animation photo for ${uniName}. Check the University Campus Strip above the Discover feed.`
+      );
+    } catch {
+      setCampusPhotoError("Could not load this campus photo. Try another image.");
+    } finally {
+      if (campusPhotoInputRef.current) campusPhotoInputRef.current.value = "";
     }
   };
 
@@ -662,6 +710,75 @@ export function ProfileSettingsView({
                 placeholder="Type your university or institute name"
                 className="w-full min-h-[44px] rounded-xl border border-outline bg-surface-low px-3.5 text-sm text-ink focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
               />
+            </div>
+          )}
+
+          {form.university.trim() && (
+            <div className="md:col-span-2 rounded-xl border border-outline bg-surface-low p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5 min-w-0">
+                <p className="text-xs font-semibold text-ink truncate">
+                  Campus Showcase Photo for {form.university.trim()}
+                </p>
+                <p className="text-[11px] text-ink-secondary">
+                  {customUniversityPhotos[form.university.trim()]
+                    ? "Custom photo active in the Discover University Campus Strip."
+                    : hasBuiltInCampusPhoto(form.university.trim())
+                    ? "Built-in university photo active — or upload your own campus shot."
+                    : "No built-in photo yet — upload a campus picture to animate it in Discover."}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <input
+                  ref={campusPhotoInputRef}
+                  id="profile-campus-photo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCampusPhotoUpload}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => campusPhotoInputRef.current?.click()}
+                  className="min-h-[40px] px-3.5 rounded-[10px] border border-outline bg-surface hover:border-primary/50 text-xs font-semibold text-ink inline-flex items-center gap-1.5 whitespace-nowrap"
+                >
+                  <Upload className="w-3.5 h-3.5 text-primary" />
+                  {customUniversityPhotos[form.university.trim()]
+                    ? "Replace Campus Photo"
+                    : "Upload Campus Photo"}
+                </button>
+                {customUniversityPhotos[form.university.trim()] && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onRemoveUniversityPhoto(form.university.trim());
+                      setCampusPhotoStatus(
+                        `Removed custom campus photo for ${form.university.trim()}.`
+                      );
+                    }}
+                    className="min-h-[40px] px-3 rounded-[10px] border border-outline bg-surface hover:border-tertiary/50 text-xs font-medium text-ink-secondary hover:text-tertiary inline-flex items-center gap-1 whitespace-nowrap"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Remove
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {(campusPhotoStatus || campusPhotoError) && (
+            <div className="md:col-span-2">
+              {campusPhotoStatus && (
+                <p className="text-xs font-medium text-strong" role="status">
+                  {campusPhotoStatus}
+                </p>
+              )}
+              {campusPhotoError && (
+                <p className="text-xs font-medium text-urgent flex items-center gap-1.5" role="alert">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {campusPhotoError}
+                </p>
+              )}
             </div>
           )}
 

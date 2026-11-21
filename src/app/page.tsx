@@ -44,11 +44,13 @@ import { OpportunityDetailInspector } from "@/components/crestpath/OpportunityDe
 import { ParsePostView } from "@/components/crestpath/ParsePostView";
 import { CareerAdvisorView } from "@/components/crestpath/CareerAdvisorView";
 import { ProfileSettingsView } from "@/components/crestpath/ProfileSettingsView";
+import { UniversityCampusStrip } from "@/components/crestpath/UniversityCampusStrip";
 
 const STORAGE_OPPS = "crestpath_opportunities_v1";
 const STORAGE_TRACKING = "crestpath_tracking_v1";
 const STORAGE_PROFILES = "crestpath_profiles_v1";
 const STORAGE_ACTIVE_PROFILE = "crestpath_active_profile_v1";
+const STORAGE_UNI_PHOTOS = "internpilot_university_photos_v1";
 
 const TRACKER_OPTIONS: Array<{ value: TrackerFilter; label: string }> = [
   { value: "all", label: "All" },
@@ -87,6 +89,9 @@ export default function CrestPathWorkspacePage() {
   ]);
   const [activeProfileId, setActiveProfileId] =
     useState<string>("profile-primary");
+  const [customUniversityPhotos, setCustomUniversityPhotos] = useState<
+    Record<string, string>
+  >({});
   const [sessionEmail, setSessionEmail] = useState<string | null>(null);
 
   // Discover filters & detail inspector state
@@ -137,6 +142,14 @@ export default function CrestPathWorkspacePage() {
           }
         }
       }
+
+      const storedUniPhotos = localStorage.getItem(STORAGE_UNI_PHOTOS);
+      if (storedUniPhotos) {
+        const parsed = JSON.parse(storedUniPhotos);
+        if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+          setCustomUniversityPhotos(parsed);
+        }
+      }
     } catch {
       // Ignore malformed localStorage entries
     } finally {
@@ -182,6 +195,14 @@ export default function CrestPathWorkspacePage() {
     localStorage.setItem(STORAGE_PROFILES, JSON.stringify(profiles));
     localStorage.setItem(STORAGE_ACTIVE_PROFILE, activeProfileId);
   }, [profiles, activeProfileId, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(
+      STORAGE_UNI_PHOTOS,
+      JSON.stringify(customUniversityPhotos)
+    );
+  }, [customUniversityPhotos, hydrated]);
 
   const activeProfile = useMemo(
     () => profiles.find((p) => p.id === activeProfileId) || profiles[0],
@@ -425,12 +446,32 @@ export default function CrestPathWorkspacePage() {
     handleClearAllFilters();
   };
 
+  const handleUploadUniversityPhoto = (university: string, dataUrl: string) => {
+    const clean = university.trim();
+    if (!clean) return;
+    setCustomUniversityPhotos((prev) => ({ ...prev, [clean]: dataUrl }));
+  };
+
+  const handleRemoveUniversityPhoto = (university: string) => {
+    const target = university.trim().toLowerCase();
+    setCustomUniversityPhotos((prev) => {
+      const next: Record<string, string> = {};
+      for (const [key, val] of Object.entries(prev)) {
+        if (key.trim().toLowerCase() !== target) {
+          next[key] = val;
+        }
+      }
+      return next;
+    });
+  };
+
   const handleResetWorkspace = () => {
     const fresh = createBlankProfile("profile-primary");
     setOpportunities([]);
     setTrackingMap({});
     setProfiles([fresh]);
     setActiveProfileId(fresh.id);
+    setCustomUniversityPhotos({});
     setSelectedOpportunityId(null);
     setIsMobileDetailOpen(false);
     handleClearAllFilters();
@@ -438,6 +479,7 @@ export default function CrestPathWorkspacePage() {
     localStorage.removeItem(STORAGE_TRACKING);
     localStorage.removeItem(STORAGE_PROFILES);
     localStorage.removeItem(STORAGE_ACTIVE_PROFILE);
+    localStorage.removeItem(STORAGE_UNI_PHOTOS);
   };
 
   const handleInspectFromAdvisor = (opp: Opportunity) => {
@@ -590,6 +632,14 @@ export default function CrestPathWorkspacePage() {
               setSelectedRegion("All Uganda");
               setSelectedCity("All");
             }}
+          />
+
+          {/* Interactive Animated University Campus Strip above the Feed */}
+          <UniversityCampusStrip
+            activeUniversity={activeProfile.university}
+            customUniversityPhotos={customUniversityPhotos}
+            onUploadUniversityPhoto={handleUploadUniversityPhoto}
+            onRemoveUniversityPhoto={handleRemoveUniversityPhoto}
           />
 
           {/* Main Split-Pane List-Detail Workspace */}
@@ -759,10 +809,13 @@ export default function CrestPathWorkspacePage() {
           activeProfile={activeProfile}
           opportunities={opportunities}
           trackingMap={trackingMap}
+          customUniversityPhotos={customUniversityPhotos}
           sessionEmail={sessionEmail}
           onSaveProfile={handleSaveProfile}
           onSwitchProfile={setActiveProfileId}
           onCreateProfile={handleCreateProfile}
+          onUploadUniversityPhoto={handleUploadUniversityPhoto}
+          onRemoveUniversityPhoto={handleRemoveUniversityPhoto}
           onImportWorkspace={handleImportWorkspace}
           onResetWorkspace={handleResetWorkspace}
         />

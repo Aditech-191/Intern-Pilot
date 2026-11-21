@@ -105,3 +105,59 @@ html.dark body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Compositor-only Ken Burns Pan & Zoom trajectories for University Campus Strip */
+@keyframes kenburnsDriftA {
+  0% {
+    transform: scale(1) translate3d(0%, 0%, 0);
+  }
+  100% {
+    transform: scale(1.08) translate3d(-1.5%, -1%, 0);
+  }
+}
+
+@keyframes kenburnsDriftB {
+  0% {
+    transform: scale(1.02) translate3d(-1.2%, 0.6%, 0);
+  }
+  100% {
+    transform: scale(1.09) translate3d(1.4%, -1.2%, 0);
+  }
+}
+
+@keyframes kenburnsDriftC {
+  0% {
+    transform: scale(1.07) translate3d(1%, 0.8%, 0);
+  }
+  100% {
+    transform: scale(1) translate3d(-0.8%, -0.6%, 0);
+  }
+}
+
+.animate-kenburns-a {
+  animation: kenburnsDriftA 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-kenburns-b {
+  animation: kenburnsDriftB 15s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.animate-kenburns-c {
+  animation: kenburnsDriftC 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.kenburns-paused {
+  animation-play-state: paused !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-kenburns-a,
+  .animate-kenburns-b,
+  .animate-kenburns-c {
+    animation: none !important;
+    transform: none !important;
+  }
+}
