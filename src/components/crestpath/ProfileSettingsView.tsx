@@ -41,6 +41,8 @@ import {
 } from "@/lib/profile-portability";
 import { validateImageUpload, validateJsonUpload } from "@/lib/file-security";
 import {
+  buildUniversityCampusSlides,
+  findSlideIndexForUniversity,
   hasBuiltInCampusPhoto,
   readAndOptimizeCampusPhotoFile,
 } from "@/lib/university-campus-media";
@@ -713,20 +715,45 @@ export function ProfileSettingsView({
             </div>
           )}
 
-          {form.university.trim() && (
-            <div className="md:col-span-2 rounded-xl border border-outline bg-surface-low p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="space-y-0.5 min-w-0">
-                <p className="text-xs font-semibold text-ink truncate">
-                  Campus Showcase Photo for {form.university.trim()}
-                </p>
-                <p className="text-[11px] text-ink-secondary">
-                  {customUniversityPhotos[form.university.trim()]
-                    ? "Custom photo active in the Discover University Campus Strip."
-                    : hasBuiltInCampusPhoto(form.university.trim())
-                    ? "Built-in university photo active — or upload your own campus shot."
-                    : "No built-in photo yet — upload a campus picture to animate it in Discover."}
-                </p>
-              </div>
+          {form.university.trim() && (() => {
+            const uniSlides = buildUniversityCampusSlides(
+              customUniversityPhotos,
+              form.university
+            );
+            const matchIdx = findSlideIndexForUniversity(
+              uniSlides,
+              form.university
+            );
+            const activeUniSlide = matchIdx >= 0 ? uniSlides[matchIdx] : null;
+
+            return (
+              <div className="md:col-span-2 rounded-xl border border-outline bg-surface-low p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  {activeUniSlide && (
+                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-[#0B221B] shrink-0 border border-outline">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={activeUniSlide.imageUrl}
+                        alt={`${activeUniSlide.university} campus preview`}
+                        referrerPolicy="no-referrer"
+                        style={{ objectPosition: activeUniSlide.objectPosition }}
+                        className="w-full h-full object-cover animate-kenburns-a"
+                      />
+                    </div>
+                  )}
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="text-xs font-semibold text-ink truncate">
+                      Campus Showcase Photo for {form.university.trim()}
+                    </p>
+                    <p className="text-[11px] text-ink-secondary">
+                      {customUniversityPhotos[form.university.trim()]
+                        ? "Custom photo active in the Discover Hero & University Campus Strip."
+                        : hasBuiltInCampusPhoto(form.university.trim())
+                        ? "Built-in university photo active — or upload your own campus shot."
+                        : "No built-in photo yet — upload a campus picture to animate it in Discover."}
+                    </p>
+                  </div>
+                </div>
 
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <input
@@ -764,7 +791,8 @@ export function ProfileSettingsView({
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {(campusPhotoStatus || campusPhotoError) && (
             <div className="md:col-span-2">

@@ -508,10 +508,11 @@ export default function CrestPathWorkspacePage() {
     >
       {activeTab === "discover" && (
         <div className="space-y-6">
-          {/* Editorial Campus Hill Hero */}
+          {/* Animated University Campus Hero */}
           <DiscoverHero
             profile={activeProfile}
             profileCount={profiles.length}
+            customUniversityPhotos={customUniversityPhotos}
             onOpenParse={() => setActiveTab("parse")}
             onOpenProfile={() => setActiveTab("profile")}
           />

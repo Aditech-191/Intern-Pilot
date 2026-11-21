@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
-import Image from "next/image";
+import React, { useState, useEffect, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -19,11 +18,18 @@ import {
   Sun,
   Moon,
 } from "lucide-react";
-import authCampusImg from "@/assets/images/auth_scholar_campus_1794946021243.jpg";
 import { sanitizeRedirect } from "@/lib/auth-client";
 import { useTheme } from "@/lib/theme-context";
+import {
+  buildUniversityCampusSlides,
+  isValidCampusImageUrl,
+  UniversityCampusSlide,
+} from "@/lib/university-campus-media";
+import { UniversityCampusBackdrop } from "@/components/crestpath/UniversityCampusBackdrop";
 
-function CrestPathLoginForm() {
+const STORAGE_UNI_PHOTOS = "internpilot_university_photos_v1";
+
+function InternPilotLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { theme, toggle } = useTheme();
@@ -38,6 +44,35 @@ function CrestPathLoginForm() {
   const [honeypot, setHoneypot] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [customPhotos, setCustomPhotos] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_UNI_PHOTOS);
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const clean: Record<string, string> = {};
+        for (const [k, v] of Object.entries(parsed)) {
+          if (typeof v === "string" && isValidCampusImageUrl(v)) {
+            clean[k] = v;
+          }
+        }
+        setCustomPhotos(clean);
+      }
+    } catch {
+      // Ignore malformed localStorage cache
+    }
+  }, []);
+
+  const slides = useMemo(
+    () => buildUniversityCampusSlides(customPhotos),
+    [customPhotos]
+  );
+  const [featuredSlide, setFeaturedSlide] = useState<UniversityCampusSlide | null>(
+    slides[0] || null
+  );
+  const activeCampusLabel = featuredSlide || slides[0];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,29 +140,31 @@ function CrestPathLoginForm() {
       {/* Main Editorial Card */}
       <main className="flex-1 flex items-center justify-center px-4 sm:px-6 pb-10">
         <div className="w-full max-w-[980px] rounded-[24px] border border-outline bg-surface overflow-hidden grid grid-cols-1 lg:grid-cols-12 items-stretch">
-          {/* Left Column: Campus Artwork & Trust Highlights */}
-          <div className="lg:col-span-6 relative bg-[#0B221B] flex flex-col justify-between min-h-[260px] lg:min-h-[560px]">
-            <Image
-              src={authCampusImg}
-              alt="Ugandan university scholars walking along a sunlit stone campus colonnade"
-              fill
-              priority
-              sizes="(max-width: 1024px) 100vw, 500px"
-              referrerPolicy="no-referrer"
-              className="object-cover object-center"
+          {/* Left Column: Animated University Campus Showcase & Trust Highlights */}
+          <div className="lg:col-span-6 relative overflow-hidden bg-[#0B221B] flex flex-col justify-between min-h-[260px] lg:min-h-[560px]">
+            <UniversityCampusBackdrop
+              slides={slides}
+              onActiveSlideChange={setFeaturedSlide}
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-t from-[#081914]/95 via-[#081914]/60 to-[#081914]/25"
+              className="absolute inset-0 bg-gradient-to-t from-[#081914]/95 via-[#081914]/80 to-[#081914]/35 pointer-events-none"
             />
 
-            <div className="relative z-10 p-6 sm:p-8 flex items-center gap-2.5">
-              <span className="w-9 h-9 rounded-[10px] bg-[#63DCAD] text-[#04261D] flex items-center justify-center shrink-0">
-                <Compass className="w-5 h-5" />
-              </span>
-              <span className="font-display text-lg font-bold text-[#F6F3EB] tracking-tight">
-                Intern Pilot
-              </span>
+            <div className="relative z-10 p-6 sm:p-8 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 shrink-0">
+                <span className="w-9 h-9 rounded-[10px] bg-[#63DCAD] text-[#04261D] flex items-center justify-center shrink-0">
+                  <Compass className="w-5 h-5" />
+                </span>
+                <span className="font-display text-lg font-bold text-[#F6F3EB] tracking-tight">
+                  Intern Pilot
+                </span>
+              </div>
+              {activeCampusLabel && (
+                <span className="text-[11px] font-medium text-[#C8EFE0]/90 truncate max-w-[190px]">
+                  {activeCampusLabel.university}
+                </span>
+              )}
             </div>
 
             <div className="relative z-10 p-6 sm:p-8 space-y-4">
@@ -322,7 +359,7 @@ export default function LoginPage() {
         </div>
       }
     >
-      <CrestPathLoginForm />
+      <InternPilotLoginForm />
     </Suspense>
   );
 }

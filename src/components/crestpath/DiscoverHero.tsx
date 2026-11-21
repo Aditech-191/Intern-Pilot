@@ -1,14 +1,18 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
+import React, { useMemo, useState } from "react";
 import { FilePlus2, UserPen, ArrowLeftRight, Linkedin, Github } from "lucide-react";
-import heroCampusImg from "@/assets/images/hero_kampala_campus_1794946019642.jpg";
 import { StudentProfile } from "@/types";
+import {
+  buildUniversityCampusSlides,
+  UniversityCampusSlide,
+} from "@/lib/university-campus-media";
+import { UniversityCampusBackdrop } from "@/components/crestpath/UniversityCampusBackdrop";
 
 interface DiscoverHeroProps {
   profile: StudentProfile;
   profileCount: number;
+  customUniversityPhotos?: Record<string, string>;
   onOpenParse: () => void;
   onOpenProfile: () => void;
 }
@@ -16,9 +20,18 @@ interface DiscoverHeroProps {
 export function DiscoverHero({
   profile,
   profileCount,
+  customUniversityPhotos = {},
   onOpenParse,
   onOpenProfile,
 }: DiscoverHeroProps) {
+  const slides = useMemo(
+    () => buildUniversityCampusSlides(customUniversityPhotos, profile.university),
+    [customUniversityPhotos, profile.university]
+  );
+  const [featuredSlide, setFeaturedSlide] = useState<UniversityCampusSlide | null>(
+    slides[0] || null
+  );
+
   const hasName = Boolean(profile.name.trim());
   const academicSummary = [
     profile.university.trim(),
@@ -37,27 +50,34 @@ export function DiscoverHero({
         }`
       : "No skills added yet — add your skills in Profile to score opportunity fit";
 
+  const activeCaptionSlide = featuredSlide || slides[0];
+
   return (
     <section
       aria-label="Student overview"
       className="relative overflow-hidden rounded-[24px] border border-outline bg-[#0B221B] min-h-[210px] sm:min-h-[232px] flex items-end"
     >
-      {/* Campus Hill Editorial Artwork with Fallback */}
-      <Image
-        src={heroCampusImg}
-        alt="Sunlit Kampala university hilltop campus surrounded by emerald trees"
-        fill
-        priority
-        sizes="(max-width: 1280px) 100vw, 1200px"
-        referrerPolicy="no-referrer"
-        className="object-cover object-center"
+      {/* Animated Kenyan/Ugandan University Campus Crossfade + Ken Burns Backdrop */}
+      <UniversityCampusBackdrop
+        slides={slides}
+        onActiveSlideChange={setFeaturedSlide}
       />
 
       {/* Measured Scrim for WCAG AA Contrast across all luminance regions */}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-t from-[#081914]/95 via-[#081914]/72 to-[#081914]/35"
+        className="absolute inset-0 bg-gradient-to-t from-[#081914]/95 via-[#081914]/75 to-[#081914]/40 pointer-events-none"
       />
+
+      {activeCaptionSlide && (
+        <p
+          aria-hidden="true"
+          className="hidden sm:block absolute top-4 right-6 z-10 text-[11px] font-medium text-[#C8EFE0]/90 tracking-wide truncate max-w-[280px] pointer-events-none"
+        >
+          {activeCaptionSlide.university} ·{" "}
+          {activeCaptionSlide.cityRegion.split("·")[0].trim()}
+        </p>
+      )}
 
       <div className="relative z-10 w-full p-5 sm:p-7 flex flex-col lg:flex-row lg:items-end justify-between gap-5">
         <div className="max-w-2xl flex items-start gap-4">
